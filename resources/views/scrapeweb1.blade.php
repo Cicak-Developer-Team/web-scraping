@@ -18,20 +18,24 @@
             <div class="card" style="width: 60vh;">
                 <div class="card-header text-center">
                     <h1 class="p-0 m-0 display-6">Web Scraping Tools</h1>
-                    <span>v.1.0.0</span>
+                    <span>v.0.0.1-</span>
+                    <code>demo</code>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">Website yang cocok untuk alat ini adalah sebagai berikut:<br>
                         <code>{{ env('APP_URL') }}/?page={loop}</code>
                     </div>
-                    <form id="scrape-form">
+                    <form method="POST" action="{{ route('print') }}" id="scrape-form">
+                        @csrf
                         <div class="mb-3">
                             <label class="form-label">Masukkan URL</label>
-                            <input type="text" id="form-url" class="form-control" name="url">
+                            <input type="text" id="form-url" value="https://www.kompas.com/?page=" readonly
+                                class="form-control" name="url">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Masukkan Container Class</label>
-                            <input type="text" id="container-class" class="form-control" name="container_class">
+                            <input type="text" id="container-class" value=".wSpec-list" readonly class="form-control"
+                                name="container_class">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Jumlah Halaman (Loop)</label>
@@ -39,7 +43,11 @@
                                 max="10" value="10">
                         </div>
                         <div class="mb-3">
-                            <button type="button" onclick="getContent()" class="btn btn-primary">
+                            {{-- <button type="button" onclick="getContent()" class="btn btn-primary">
+                                SUBMIT
+                            </button> --}}
+
+                            <button class="btn btn-success">
                                 SUBMIT
                             </button>
                         </div>
@@ -49,8 +57,11 @@
         </div>
 
         <!-- Table for displaying results -->
-        <div id="results-table" class="my-4">
+        {{-- <div id="results-table" class="my-4">
             <h2>Hasil Scraping</h2>
+            <button disabled id="print" class="btn btn-success">
+                PRINT Excel
+            </button>
             <table class="table table-bordered">
                 <thead>
                     <tr>
@@ -64,7 +75,7 @@
                     <!-- Rows will be added here dynamically -->
                 </tbody>
             </table>
-        </div>
+        </div> --}}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
@@ -74,6 +85,7 @@
     <script>
         async function getContent() {
             const url = document.getElementById("form-url").value;
+            const button = document.getElementById("print");
             const containerClass = document.getElementById("container-class").value;
             const loop = document.getElementById("form-loop").value;
 
@@ -91,6 +103,7 @@
                 // Loop through each page's data
                 data.forEach((pageData, pagenumber) => {
                     const page = pageData.page;
+                    button.removeAttribute("disabled")
 
                     pageData.data.forEach((item, loop) => {
                         // Create a new row for each item

@@ -8,6 +8,7 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/", "index");
     Route::get("/scrape", "scrapeIndex")->name("scrape-index");
     Route::get("/scrape-dynamic", "scrapeDynamicIndex")->name("scrape-dynamic-index");
+    Route::post("/print", "print")->name("print");
 
     // func
     Route::post("/scrape", "scrape")->name("scrape");

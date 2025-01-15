@@ -13,9 +13,9 @@ class ScrapperController extends CrawlerService
     }
 
 
-    public function scrapeIndex()
+    public function kompas()
     {
-        return view('scrapeweb1');
+        return view('kompas');
     }
 
     public function scrapeDynamicIndex()

@@ -3,8 +3,7 @@
         <tr>
             <th>NO</th>
             <th>JUDUL</th>
-            <th>LINK</th>
-            <th>SUB</th>
+            <th>GAMBAR</th>
             <th>ARTIKEL</th>
         </tr>
     </thead>
@@ -13,9 +12,8 @@
             <tr>
                 <td>{{ $key + 1 }}</td>
                 <td>{{ $item['title'] }}</td>
-                <td>{{ $item['link'] }}</td>
-                <td>{{ $item['sub'] }}</td>
-                <td>{{ $item['artikel'] }}</td>
+                <td>{{ $item['gambar'] }}</td>
+                <td>{{ $item['content'] }}</td>
             </tr>
         @endforeach
     </tbody>

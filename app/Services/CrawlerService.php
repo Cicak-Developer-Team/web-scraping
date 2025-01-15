@@ -140,4 +140,66 @@ class CrawlerService
         $data = $this->scrape($request);
         return Excel::download(new UsersExport(collect($data)->flatten(2)), time() . '.xlsx');
     }
+
+    public function printAndDownload($data)
+    {
+        return Excel::download(new UsersExport($data), time() . '.xlsx');
+    }
+
+    // web scrape
+    public function KompasScrape(Request $request)
+    {
+        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        $urls = $request->url;
+        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $results = [];
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $urls . $page;
+            $response = Http::get($paginatedUrl);
+            if ($response->successful()) {
+                $body = $response->body();
+                $crawler = new Crawler($body);
+
+                // items clas
+                $crawler->filter(".articleItem")->each(function ($node) use (&$results) {
+                    $link = $node->filter('a')->attr('href');
+                    $responseLinkNode = Http::get($link);
+                    $crawlerSec = new Crawler($responseLinkNode->body());
+                    // content class
+                    $text = $crawlerSec->filter(".read__content")->text();
+
+                    // Hapus pola umum JavaScript (fleksibel)
+                    $text = preg_replace([
+                        '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/is',
+                        '/\b(var|let|const)\s+\w+\s*=.*?;/is',                     // Hapus deklarasi variabel
+                        '/\bfunction\s+\w*\s*\([^)]*\)\s*{[^}]*}/is',              // Hapus deklarasi fungsi
+                        '/\bnew\s+\w+\([^)]*\);?/is',                              // Hapus instansiasi objek
+                        '/\bif\s*\([^)]*\)\s*{[^}]*}/is',                          // Hapus blok kondisi if
+                        '/\bwhile\s*\([^)]*\)\s*{[^}]*}/is',                       // Hapus blok while
+                        '/\bfor\s*\([^)]*\)\s*{[^}]*}/is',                         // Hapus blok for
+                        '/\bxhr\.[a-z]+\([^)]*\);/is',                             // Hapus metode xhr
+                        '/\bconsole\.[a-z]+\([^)]*\);/is',                         // Hapus log konsol
+                        '/\breturn\b[^;]+;/is',                                    // Hapus pernyataan return
+                        '/\bdocument\.[a-z]+\([^)]*\)\s*[^;]*;/is',                // Hapus manipulasi DOM
+                        '/[a-zA-Z_$][\w$]*\.addEventListener\([^)]*\)\s*{[^}]*}/is', // Hapus event listener
+                        '/}\s*else\s*{\s*}/is',                                    // Hapus blok else kosong
+                        '/{\s*}/is'                                                // Hapus blok kosong secara umum
+                    ], '', $text);
+                    $text = str_replace(" } });", "", $text);
+                    // Hapus semua tag HTML
+                    $text = strip_tags($text);
+                    // Hapus spasi ekstra
+                    $text = trim(preg_replace('/\s+/', ' ', $text));
+                    $results[] = [
+                        "title" => $node->text(),
+                        "link" => $link,
+                        "gambar" => $node->filter('img')->attr('src'),
+                        "content" => $text
+                    ];
+                });
+            }
+        }
+        return $this->printAndDownload($results);
+    }
 }

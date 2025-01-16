@@ -13,7 +13,8 @@
     <div class="container vh-100 d-flex flex-column justify-content-center align-items-center">
         <h1 class="text-center mb-4">Welcome to Scrapper Tools</h1>
         <div class="list-group list-group-flush" style="min-width: 20vw">
-            <a href="{{ route('kompas') }}" class="list-group-item list-group-item-action border">Kompas.com</a>
+            <a href="{{ route('kompas') }}" class="list-group-item list-group-item-action border">Kompas</a>
+            <a href="{{ route('republika') }}" class="list-group-item list-group-item-action border">Republika</a>
         </div>
     </div>
 

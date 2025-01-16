@@ -18,8 +18,8 @@ class ScrapperController extends CrawlerService
         return view('kompas');
     }
 
-    public function scrapeDynamicIndex()
+    public function republika()
     {
-        return view("scrapeweb2");
+        return view("republika");
     }
 }

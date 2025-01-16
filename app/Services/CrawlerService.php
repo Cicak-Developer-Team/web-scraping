@@ -202,4 +202,43 @@ class CrawlerService
         }
         return $this->printAndDownload($results);
     }
+
+    public function republikaScrape(Request $request)
+    {
+        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        $urls = $request->url;
+        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $results = [];
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = str_replace("[page]", $page, $urls);
+            $response = Http::get($paginatedUrl);
+            if ($response->successful()) {
+                $body = $response->body();
+                $crawler = new Crawler($body);
+
+                // items clas
+                $crawler->filter(".list-group-item")->each(function ($node) use (&$results) {
+                    $link = $node->filter('a')->attr('href');
+                    $responseLinkNode = Http::get($link);
+                    $crawlerSec = new Crawler($responseLinkNode->body());
+                    // content class
+                    $text = $crawlerSec->filter(".article-content")->text();
+
+                    $text = str_replace(" } });", "", $text);
+                    // Hapus semua tag HTML
+                    $text = strip_tags($text);
+                    // Hapus spasi ekstra
+                    $text = trim(preg_replace('/\s+/', ' ', $text));
+                    $results[] = [
+                        "title" => $node->text(),
+                        "link" => $link,
+                        "gambar" => $node->filter('img')->attr('src'),
+                        "content" => $text
+                    ];
+                });
+            }
+        }
+        return $this->printAndDownload($results);
+    }
 }

@@ -22,4 +22,9 @@ class ScrapperController extends CrawlerService
     {
         return view("republika");
     }
+
+    public function okezone()
+    {
+        return view("okezone");
+    }
 }

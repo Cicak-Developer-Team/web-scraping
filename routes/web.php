@@ -17,6 +17,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/republika", "republika")->name("republika");
     Route::post("/republikaScrape", "republikaScrape")->name("republikaScrape");
 
+    // Okezone
+    Route::get("/okezone", "okezone")->name("okezone");
+    Route::post("/okezoneScrape", "okezoneScrape")->name("okezoneScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

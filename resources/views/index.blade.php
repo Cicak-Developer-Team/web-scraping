@@ -15,6 +15,7 @@
         <div class="list-group list-group-flush" style="min-width: 20vw">
             <a href="{{ route('kompas') }}" class="list-group-item list-group-item-action border">Kompas</a>
             <a href="{{ route('republika') }}" class="list-group-item list-group-item-action border">Republika</a>
+            <a href="{{ route('okezone') }}" class="list-group-item list-group-item-action border">Okezone</a>
         </div>
     </div>
 

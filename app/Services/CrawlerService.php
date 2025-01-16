@@ -297,4 +297,53 @@ class CrawlerService
         }
         return $this->printAndDownload($results);
     }
+
+
+    public function kontanScrape(Request $request)
+    {
+        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        $urls = $request->url;
+        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $results = [];
+
+        $starPage = 0;
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $urls . $starPage;
+            $response = Http::get($paginatedUrl);
+            if ($response->successful()) {
+                $body = $response->body();
+                $crawler = new Crawler($body);
+
+                // items class
+                $crawler->filter(".list-berita ul li")->each(function ($node) use (&$results) {
+                    $link = $node->filter('a')->attr('href');
+                    $responseLinkNode = Http::get($link);
+                    $crawlerSec = new Crawler($responseLinkNode->body());
+                    // content class
+                    $text = "";
+                    if ($crawlerSec->filter(".tmpt-desk-kon")->count() > 0) {
+                        $text = $crawlerSec->filter(".tmpt-desk-kon")->text();
+                    } else if ($crawlerSec->filter("#release-content")->count() > 0) {
+                        $text = $crawlerSec->filter("#release-content")->text();
+                    } else if ($crawlerSec->filter(".ctn")->count() > 0) {
+                        $text = $crawlerSec->filter(".ctn")->text();
+                    }
+
+                    $text = str_replace(" } });", "", $text);
+                    // Hapus semua tag HTML
+                    $text = strip_tags($text);
+                    // Hapus spasi ekstra
+                    $text = trim(preg_replace('/\s+/', ' ', $text));
+                    $results[] = [
+                        "title" => $node->text(),
+                        "link" => $link,
+                        "gambar" => $node->filter('img')->attr('src'),
+                        "content" => $text
+                    ];
+                });
+            }
+            $starPage += 20;
+        }
+        return $this->printAndDownload($results);
+    }
 }

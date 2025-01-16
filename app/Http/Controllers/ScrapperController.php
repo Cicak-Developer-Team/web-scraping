@@ -27,4 +27,9 @@ class ScrapperController extends CrawlerService
     {
         return view("okezone");
     }
+
+    public function kontan()
+    {
+        return view("kontan");
+    }
 }

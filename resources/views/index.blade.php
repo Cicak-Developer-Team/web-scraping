@@ -16,6 +16,7 @@
             <a href="{{ route('kompas') }}" class="list-group-item list-group-item-action border">Kompas</a>
             <a href="{{ route('republika') }}" class="list-group-item list-group-item-action border">Republika</a>
             <a href="{{ route('okezone') }}" class="list-group-item list-group-item-action border">Okezone</a>
+            <a href="{{ route('kontan') }}" class="list-group-item list-group-item-action border">Kontan</a>
         </div>
     </div>
 

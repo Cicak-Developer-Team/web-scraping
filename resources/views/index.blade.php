@@ -18,12 +18,13 @@
             <a href="{{ route('okezone') }}" class="list-group-item list-group-item-action border">Okezone</a>
             <a href="{{ route('kontan') }}" class="list-group-item list-group-item-action border">Kontan</a>
             <a href="{{ route('bisnis') }}" class="list-group-item list-group-item-action border">Bisnis</a>
-            <a href="{{ route('pikiranrakyat') }}" class="list-group-item list-group-item-action border">Pikiran
-                Rakyat</a>
+            {{-- <a href="{{ route('pikiranrakyat') }}" class="list-group-item list-group-item-action border">Pikiran
+                Rakyat</a> --}}
             <a href="{{ route('mediaindo') }}" class="list-group-item list-group-item-action border">Media Indo</a>
-            <a href="{{ route('jawa') }}" class="list-group-item list-group-item-action border">Jawapos</a>
+            {{-- <a href="{{ route('jawa') }}" class="list-group-item list-group-item-action border">Jawapos</a> --}}
             <a href="{{ route('detiksport') }}" class="list-group-item list-group-item-action border">Detik Sport</a>
             <a href="{{ route('sindonews') }}" class="list-group-item list-group-item-action border">Sindonews</a>
+            <a href="{{ route('boalsport') }}" class="list-group-item list-group-item-action border">Boalsport</a>
         </div>
     </div>
 

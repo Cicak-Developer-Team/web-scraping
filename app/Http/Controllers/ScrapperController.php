@@ -57,4 +57,9 @@ class ScrapperController extends CrawlerService
     {
         return view("detiksport");
     }
+
+    public function sindonews()
+    {
+        return view("sindonews");
+    }
 }

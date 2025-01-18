@@ -29,6 +29,14 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/bisnis", "bisnis")->name("bisnis");
     Route::post("/bisnisScrape", "bisnisScrape")->name("bisnisScrape");
 
+    // pikiranrakyat
+    Route::get("/pikiranrakyat", "pikiranrakyat")->name("pikiranrakyat");
+    Route::post("/pikiranrakyatScrape", "pikiranrakyatScrape")->name("pikiranrakyatScrape");
+
+    // mediaindo
+    Route::get("/mediaindo", "mediaindo")->name("mediaindo");
+    Route::post("/mediaindoScrape", "mediaindoScrape")->name("mediaindoScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

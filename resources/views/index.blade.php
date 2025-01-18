@@ -18,6 +18,9 @@
             <a href="{{ route('okezone') }}" class="list-group-item list-group-item-action border">Okezone</a>
             <a href="{{ route('kontan') }}" class="list-group-item list-group-item-action border">Kontan</a>
             <a href="{{ route('bisnis') }}" class="list-group-item list-group-item-action border">Bisnis</a>
+            <a href="{{ route('pikiranrakyat') }}" class="list-group-item list-group-item-action border">Pikiran
+                Rakyat</a>
+            <a href="{{ route('mediaindo') }}" class="list-group-item list-group-item-action border">Media Indo</a>
         </div>
     </div>
 

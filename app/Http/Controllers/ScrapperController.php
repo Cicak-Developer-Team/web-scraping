@@ -37,4 +37,14 @@ class ScrapperController extends CrawlerService
     {
         return view("bisnis");
     }
+
+    public function pikiranrakyat()
+    {
+        return view("pikiranrakyat");
+    }
+
+    public function mediaindo()
+    {
+        return view("mediaindo");
+    }
 }

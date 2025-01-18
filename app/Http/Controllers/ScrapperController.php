@@ -32,4 +32,9 @@ class ScrapperController extends CrawlerService
     {
         return view("kontan");
     }
+
+    public function bisnis()
+    {
+        return view("bisnis");
+    }
 }

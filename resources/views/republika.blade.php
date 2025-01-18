@@ -33,7 +33,7 @@
                         <div class="mb-3">
                             <label class="form-label">Jumlah Halaman (Loop)</label>
                             <input type="number" id="form-loop" class="form-control" name="loop" min="1"
-                                max="10" value="10">
+                                value="10">
                         </div>
                         <div class="mb-3">
 

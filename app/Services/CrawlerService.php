@@ -3,13 +3,30 @@
 namespace App\Services;
 
 use App\Exports\UsersExport;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\DomCrawler\Crawler;
 
 class CrawlerService
 {
+    protected $filter = [
+        "Keberlanjutan Lingkungan",
+        "Etika Lingkungan",
+        "Rendah Karbon",
+        "Pengurangan Emisi",
+        "Emisi Gas Rumah Kaca",
+        "Emisi Karbon",
+        "Emisi CO2",
+        "Emisi Gas Rumah Kaca",
+        "Hijau",
+        "Polusi",
+        "Perlindungan Lingkungan",
+        "Via WA",
+    ];
+
     public function scrape(Request $request)
     {
         // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
@@ -86,7 +103,6 @@ class CrawlerService
         return $results;
     }
 
-
     public function scrapeDynamic(Request $request)
     {
         // Mendapatkan input untuk `list_item`, `page`, dan `container_class`
@@ -135,6 +151,7 @@ class CrawlerService
         return response()->json($results);
     }
 
+    // helper
     public function print(Request $request)
     {
         $data = $this->scrape($request);
@@ -144,6 +161,59 @@ class CrawlerService
     public function printAndDownload($data)
     {
         return Excel::download(new UsersExport($data), time() . '.xlsx');
+    }
+    private function processPageContent(string $body, array &$results, string $classItem, string $classContent): void
+    {
+        $crawler = new Crawler($body);
+
+        $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
+            $kataTeks = preg_split('/\s+/', $node->text());
+            $kataDitemukan = array_intersect($this->filter ?? [], $kataTeks);
+
+            if (!empty($kataDitemukan)) {
+                $this->processNode($node, $results, $classContent);
+            }
+        });
+    }
+
+    private function processNode(Crawler $node, array &$results, string $classContent): void
+    {
+        try {
+            $link = $node->filter('a')->attr('href');
+            $image = $node->filter('img')->attr('src');
+
+            $response = Http::get($link);
+            if ($response->successful()) {
+                $crawlerSec = new Crawler($response->body());
+                $text = $crawlerSec->filter($classContent)->text();
+
+                $results[] = [
+                    'title' => trim($node->text()),
+                    'link' => $link,
+                    'gambar' => $image,
+                    'content' => $this->cleanText($text)
+                ];
+            }
+        } catch (Exception $e) {
+            Log::error('Error processing node', ['error' => $e->getMessage()]);
+        }
+    }
+
+    private function cleanText(string $text): string
+    {
+        $text = str_replace(' } });', '', $text);
+        $text = htmlspecialchars_decode(strip_tags($text));
+        return trim(preg_replace('/\s+/', ' ', $text));
+    }
+
+    protected function filterTitle($title)
+    {
+        foreach ($this->filter as $keyword) {
+            if (stripos($title, $keyword) !== false) {
+                return true; // Jika title mengandung salah satu kata kunci, ambil data
+            }
+        }
+        return false; // Jika tidak ada kata kunci yang ditemukan, lewati data
     }
 
     // web scrape
@@ -244,106 +314,213 @@ class CrawlerService
 
     public function okezoneScrape(Request $request)
     {
-        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        set_time_limit(0);
+
+        // Mendapatkan input URL, jumlah loop, dan hasil array
         $urls = $request->url;
-        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $loop = $request->loop;
         $results = [];
 
+        // Inisialisasi nilai number1 dan number2
+        $number1 = time(); // Nilai awal number1
+        $number2 = 33; // Nilai awal number2
+
         for ($page = 1; $page <= $loop; $page++) {
-            $paginatedUrl = $urls . $page;
-            $response = Http::get($paginatedUrl);
-            if ($response->successful()) {
-                $body = $response->body();
-                $crawler = new Crawler($body);
+            // Format URL berdasarkan number1 dan number2
+            $paginatedUrl = $urls . "/0/" . $number1 . "/" . $number2 . "/12";
 
-                // items clas
-                $crawler->filter(".list-contentx")->each(function ($node) use (&$results) {
-                    $link = $node->filter('a')->attr('href');
-                    $responseLinkNode = Http::get($link);
-                    $crawlerSec = new Crawler($responseLinkNode->body());
-                    // content class
-                    $text = $crawlerSec->filter(".c-detail")->text();
+            try {
+                $response = Http::get($paginatedUrl);
+                if ($response->successful()) {
+                    $body = $response->body();
+                    $crawler = new Crawler($body);
+                    $crawler->filter(".list-contentx li")->each(function ($node) use (&$results) {
+                        $title = trim($node->text());
 
-                    // Hapus pola umum JavaScript (fleksibel)
-                    $text = preg_replace([
-                        '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/is',
-                        '/\b(var|let|const)\s+\w+\s*=.*?;/is',                     // Hapus deklarasi variabel
-                        '/\bfunction\s+\w*\s*\([^)]*\)\s*{[^}]*}/is',              // Hapus deklarasi fungsi
-                        '/\bnew\s+\w+\([^)]*\);?/is',                              // Hapus instansiasi objek
-                        '/\bif\s*\([^)]*\)\s*{[^}]*}/is',                          // Hapus blok kondisi if
-                        '/\bwhile\s*\([^)]*\)\s*{[^}]*}/is',                       // Hapus blok while
-                        '/\bfor\s*\([^)]*\)\s*{[^}]*}/is',                         // Hapus blok for
-                        '/\bxhr\.[a-z]+\([^)]*\);/is',                             // Hapus metode xhr
-                        '/\bconsole\.[a-z]+\([^)]*\);/is',                         // Hapus log konsol
-                        '/\breturn\b[^;]+;/is',                                    // Hapus pernyataan return
-                        '/\bdocument\.[a-z]+\([^)]*\)\s*[^;]*;/is',                // Hapus manipulasi DOM
-                        '/[a-zA-Z_$][\w$]*\.addEventListener\([^)]*\)\s*{[^}]*}/is', // Hapus event listener
-                        '/}\s*else\s*{\s*}/is',                                    // Hapus blok else kosong
-                        '/{\s*}/is'                                                // Hapus blok kosong secara umum
-                    ], '', $text);
-                    $text = str_replace(" } });", "", $text);
-                    // Hapus semua tag HTML
-                    $text = strip_tags($text);
-                    // Hapus spasi ekstra
-                    $text = trim(preg_replace('/\s+/', ' ', $text));
-                    $results[] = [
-                        "title" => $node->text(),
-                        "link" => $link,
-                        "gambar" => $node->filter('img')->attr('src'),
-                        "content" => $text
-                    ];
-                });
+                        if ($this->filterTitle($title)) {
+                            $link = $node->filter('a')->attr('href');
+                            $gambar = $node->filter('img')->attr('src');
+
+                            $responseLinkNode = Http::get($link);
+                            if ($responseLinkNode->successful()) {
+                                $crawlerSec = new Crawler($responseLinkNode->body());
+                                $text = $crawlerSec->filter(".c-detail")->count() > 0
+                                    ? $crawlerSec->filter(".c-detail")->text()
+                                    : "";
+
+                                // Bersihkan teks dari elemen yang tidak diperlukan
+                                $text = preg_replace([
+                                    '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/is',
+                                    '/\b(var|let|const)\s+\w+\s*=.*?;/is',
+                                    '/\bfunction\s+\w*\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bnew\s+\w+\([^)]*\);?/is',
+                                    '/\bif\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bwhile\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bfor\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bxhr\.[a-z]+\([^)]*\);/is',
+                                    '/\bconsole\.[a-z]+\([^)]*\);/is',
+                                    '/\breturn\b[^;]+;/is',
+                                    '/\bdocument\.[a-z]+\([^)]*\)\s*[^;]*;/is',
+                                    '/[a-zA-Z_$][\w$]*\.addEventListener\([^)]*\)\s*{[^}]*}/is',
+                                    '/}\s*else\s*{\s*}/is',
+                                    '/{\s*}/is'
+                                ], '', $text);
+
+                                $text = str_replace(" } });", "", $text);
+                                $text = strip_tags($text);
+                                $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                                $results[] = [
+                                    "title" => $title,
+                                    "link" => $link,
+                                    "gambar" => $gambar,
+                                    "content" => $text
+                                ];
+                            }
+                        }
+                    });
+                }
+            } catch (Exception $e) {
+                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
             }
+
+            // Perbarui number1 dan number2 untuk iterasi berikutnya
+            $number1 -= 3000;
+            $number2 += 12;
         }
+
         return $this->printAndDownload($results);
     }
 
 
+
+    // Sesuai tahun
     public function kontanScrape(Request $request)
     {
+        set_time_limit(0);
+
         // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
         $urls = $request->url;
-        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $loop = $request->loop;
         $results = [];
 
         $starPage = 0;
+        $classItem = '.list-berita ul li';
+
         for ($page = 1; $page <= $loop; $page++) {
             $paginatedUrl = $urls . $starPage;
-            $response = Http::get($paginatedUrl);
-            if ($response->successful()) {
-                $body = $response->body();
-                $crawler = new Crawler($body);
 
-                // items class
-                $crawler->filter(".list-berita ul li")->each(function ($node) use (&$results) {
-                    $link = $node->filter('a')->attr('href');
-                    $responseLinkNode = Http::get($link);
-                    $crawlerSec = new Crawler($responseLinkNode->body());
-                    // content class
-                    $text = "";
-                    if ($crawlerSec->filter(".tmpt-desk-kon")->count() > 0) {
-                        $text = $crawlerSec->filter(".tmpt-desk-kon")->text();
-                    } else if ($crawlerSec->filter("#release-content")->count() > 0) {
-                        $text = $crawlerSec->filter("#release-content")->text();
-                    } else if ($crawlerSec->filter(".ctn")->count() > 0) {
-                        $text = $crawlerSec->filter(".ctn")->text();
-                    }
+            try {
+                $response = Http::get($paginatedUrl);
 
-                    $text = str_replace(" } });", "", $text);
-                    // Hapus semua tag HTML
-                    $text = strip_tags($text);
-                    // Hapus spasi ekstra
-                    $text = trim(preg_replace('/\s+/', ' ', $text));
-                    $results[] = [
-                        "title" => $node->text(),
-                        "link" => $link,
-                        "gambar" => $node->filter('img')->attr('src'),
-                        "content" => $text
-                    ];
-                });
+                if ($response->successful()) {
+                    $body = $response->body();
+                    $crawler = new Crawler($body);
+
+                    $crawler->filter($classItem)->each(function ($node) use (&$results) {
+                        $title = trim($node->text());
+
+                        if ($this->filterTitle($title)) {
+                            $link = $node->filter('a')->attr('href');
+                            $gambar = $node->filter('img')->attr('src');
+
+                            $responseLinkNode = Http::get($link);
+                            if ($responseLinkNode->successful()) {
+                                $crawlerSec = new Crawler($responseLinkNode->body());
+                                $text = "";
+
+                                if ($crawlerSec->filter('.tmpt-desk-kon')->count() > 0) {
+                                    $text = $crawlerSec->filter('.tmpt-desk-kon')->text();
+                                } else if ($crawlerSec->filter('#release-content')->count() > 0) {
+                                    $text = $crawlerSec->filter('#release-content')->text();
+                                } else if ($crawlerSec->filter('.ctn')->count() > 0) {
+                                    $text = $crawlerSec->filter('.ctn')->text();
+                                }
+
+                                $text = str_replace(' } });', '', $text);
+                                $text = strip_tags($text);
+                                $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                                $results[] = [
+                                    "title" => $title,
+                                    "link" => $link,
+                                    "gambar" => $gambar,
+                                    "content" => $text
+                                ];
+                            }
+                        }
+                    });
+                }
+            } catch (Exception $e) {
+                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
             }
+
             $starPage += 20;
         }
+
+        return $this->printAndDownload($results);
+    }
+
+    public function bisnisScrape(Request $request)
+    {
+        set_time_limit(0);
+        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        $urls = $request->url;
+        $loop = $request->loop;
+        $results = [];
+
+        $classItem = '.artItem';
+        $classContent = '.detailsContent';
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $urls . $page;
+
+            try {
+                $response = Http::get($paginatedUrl);
+
+                if ($response->successful()) {
+                    $body = $response->body();
+                    $crawler = new Crawler($body);
+
+                    $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
+                        $title = trim($node->text());
+
+                        if ($this->filterTitle($title)) {
+                            $link = $node->filter('a')->attr('href');
+                            $gambar = $node->filter('img')->attr('src');
+
+                            $responseLinkNode = Http::get($link);
+                            if ($responseLinkNode->successful()) {
+                                $crawlerSec = new Crawler($responseLinkNode->body());
+                                $text = "";
+
+                                if ($crawlerSec->filter($classContent)->count() > 0) {
+                                    $text = $crawlerSec->filter($classContent)->text();
+                                }
+
+                                $text = str_replace(' } });', '', $text);
+                                $text = strip_tags($text);
+                                $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                                $results[] = [
+                                    "title" => $title,
+                                    "link" => $link,
+                                    "gambar" => $gambar,
+                                    "content" => $text
+                                ];
+                            }
+                        }
+                    });
+                }
+            } catch (Exception $e) {
+                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+            }
+        }
+
+        if (empty($results)) {
+            dd(response()->json(['message' => 'Tidak ada konten yang mengandung kata dari filter'], 404));
+        }
+
         return $this->printAndDownload($results);
     }
 }

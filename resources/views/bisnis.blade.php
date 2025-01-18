@@ -22,13 +22,12 @@
                     <code>demo</code>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('kontanScrape') }}" id="scrape-form">
+                    <form method="POST" action="{{ route('bisnisScrape') }}" id="scrape-form">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label">Masukkan URL</label>
-                            <input type="text" id="form-url" readonly
-                                value="https://www.kontan.co.id/search/indeks?per_page=" class="form-control"
-                                name="url">
+                            <input type="text" id="form-url" readonly value="https://www.bisnis.com/index?page="
+                                class="form-control" name="url">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Jumlah Halaman (Loop)</label>

@@ -22,6 +22,7 @@
                 Rakyat</a>
             <a href="{{ route('mediaindo') }}" class="list-group-item list-group-item-action border">Media Indo</a>
             <a href="{{ route('jawa') }}" class="list-group-item list-group-item-action border">Jawapos</a>
+            <a href="{{ route('detiksport') }}" class="list-group-item list-group-item-action border">Detik Sport</a>
         </div>
     </div>
 

@@ -41,6 +41,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/jawa", "jawa")->name("jawa");
     Route::post("/jawaScrape", "jawaScrape")->name("jawaScrape");
 
+    // detiksport
+    Route::get("/detiksport", "detiksport")->name("detiksport");
+    Route::post("/detiksportScrape", "detiksportScrape")->name("detiksportScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

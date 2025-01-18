@@ -52,4 +52,9 @@ class ScrapperController extends CrawlerService
     {
         return view("jawa");
     }
+
+    public function detiksport()
+    {
+        return view("detiksport");
+    }
 }

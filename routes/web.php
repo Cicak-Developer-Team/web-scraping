@@ -37,6 +37,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/mediaindo", "mediaindo")->name("mediaindo");
     Route::post("/mediaindoScrape", "mediaindoScrape")->name("mediaindoScrape");
 
+    // jawa
+    Route::get("/jawa", "jawa")->name("jawa");
+    Route::post("/jawaScrape", "jawaScrape")->name("jawaScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

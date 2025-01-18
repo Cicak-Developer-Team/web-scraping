@@ -47,4 +47,9 @@ class ScrapperController extends CrawlerService
     {
         return view("mediaindo");
     }
+
+    public function jawa()
+    {
+        return view("jawa");
+    }
 }

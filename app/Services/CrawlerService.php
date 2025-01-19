@@ -999,4 +999,87 @@ class CrawlerService
 
         return $this->printAndDownload($results);
     }
+
+    public function moneykompasScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        $urls = $request->url;
+        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $results = [];
+
+        $classItem = ".articleItem";      // Class untuk item artikel
+        $classContent = ".read__content"; // Class untuk konten artikel
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $urls . $page;
+
+            try {
+                $response = Http::get($paginatedUrl);
+
+                if ($response->successful()) {
+                    $body = $response->body();
+                    $crawler = new Crawler($body);
+
+                    // Iterasi setiap item artikel
+                    $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
+                        $title = trim($node->text());
+
+                        // Terapkan filter judul
+                        if ($this->filterTitle($title)) {
+                            // Ambil link dan gambar
+                            $link = $node->filter('a')->attr('href');
+                            $gambar = $node->filter('img')->attr('src');
+
+                            $responseLinkNode = Http::get($link);
+
+                            if ($responseLinkNode->successful()) {
+                                $crawlerSec = new Crawler($responseLinkNode->body());
+                                $text = "";
+
+                                // Ambil konten artikel jika ada
+                                if ($crawlerSec->filter($classContent)->count() > 0) {
+                                    $text = $crawlerSec->filter($classContent)->text();
+                                }
+
+                                // Bersihkan konten dari tag HTML dan pola JavaScript
+                                $text = preg_replace([
+                                    '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/is',
+                                    '/\b(var|let|const)\s+\w+\s*=.*?;/is',
+                                    '/\bfunction\s+\w*\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bnew\s+\w+\([^)]*\);?/is',
+                                    '/\bif\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bwhile\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bfor\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bxhr\.[a-z]+\([^)]*\);/is',
+                                    '/\bconsole\.[a-z]+\([^)]*\);/is',
+                                    '/\breturn\b[^;]+;/is',
+                                    '/\bdocument\.[a-z]+\([^)]*\)\s*[^;]*;/is',
+                                    '/[a-zA-Z_$][\w$]*\.addEventListener\([^)]*\)\s*{[^}]*}/is',
+                                    '/}\s*else\s*{\s*}/is',
+                                    '/{\s*}/is'
+                                ], '', $text);
+                                $text = str_replace(" } });", "", $text);
+                                $text = strip_tags($text);
+                                $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                                // Simpan data ke hasil
+                                $results[] = [
+                                    "title" => $title,
+                                    "link" => $link,
+                                    "gambar" => $gambar,
+                                    "content" => $text,
+                                ];
+                            }
+                        }
+                    });
+                }
+            } catch (Exception $e) {
+                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+            }
+        }
+
+        return $this->printAndDownload($results);
+    }
 }

@@ -77,4 +77,9 @@ class ScrapperController extends CrawlerService
     {
         return view("rmid");
     }
+
+    public function thejakartapost()
+    {
+        return view("thejakartapost");
+    }
 }

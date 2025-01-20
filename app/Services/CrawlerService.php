@@ -25,7 +25,7 @@ class CrawlerService
         "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "fk uin",
+        "Retreat",
     ];
 
     public function scrape(Request $request)
@@ -1103,7 +1103,6 @@ class CrawlerService
             $paginatedUrl = "$url{$formattedDate}";
             try {
                 $response = Http::get($paginatedUrl);
-                dd($response->body());
                 if ($response->successful()) {
                     $body = $response->body();
                     $crawler = new Crawler($body);
@@ -1167,6 +1166,62 @@ class CrawlerService
 
             // Tambah satu hari untuk iterasi berikutnya
             $dari->addDay();
+        }
+
+        return $this->printAndDownload($results);
+    }
+
+    public function thejakartapostScrape(Request $request)
+    {
+        set_time_limit(0);
+        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        $urls = $request->url;
+        $loop = $request->loop;
+        $results = [];
+
+        $classItem = '.listNews';
+        $classContent = '.tjp-single__content';
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $urls . $page;
+
+            try {
+                $response = Http::get($paginatedUrl);
+
+                if ($response->successful()) {
+                    $body = $response->body();
+                    $crawler = new Crawler($body);
+                    $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
+                        $title = trim($node->filter(".titleNews")->text());
+                        if ($this->filterTitle($title)) {
+                            $link = "https://www.thejakartapost.com" . $node->filter('a')->attr('href');
+                            $gambar = $node->filter('img')->attr('src');
+                            $responseLinkNode = Http::get($link);
+                            if ($responseLinkNode->successful()) {
+                                $crawlerSec = new Crawler($responseLinkNode->body());
+                                $text = "";
+
+                                if ($crawlerSec->filter($classContent)->count() > 0) {
+                                    $text = $crawlerSec->filter($classContent)->text();
+                                }
+
+                                $text = str_replace(' } });', '', $text);
+                                $text = strip_tags($text);
+                                $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                                $results[] = [
+                                    "title" => $title,
+                                    "link" => $link,
+                                    "gambar" => $gambar,
+                                    "content" => $text
+                                ];
+                            }
+                        }
+                    });
+                }
+            } catch (Exception $e) {
+                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+            }
         }
 
         return $this->printAndDownload($results);

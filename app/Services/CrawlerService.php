@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exports\UsersExport;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -24,7 +25,7 @@ class CrawlerService
         "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "persija",
+        "fk uin",
     ];
 
     public function scrape(Request $request)
@@ -1078,6 +1079,94 @@ class CrawlerService
             } catch (Exception $e) {
                 Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
             }
+        }
+
+        return $this->printAndDownload($results);
+    }
+
+    public function rmidScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        // Mendapatkan input tanggal "dari" dan "sampai"
+        $url = $request->url;
+        $dari = Carbon::parse($request->dari);
+        $sampai = Carbon::parse($request->sampai);
+        $results = [];
+
+        $classItem = ".post";  // Class untuk item artikel
+        $classContent = ".isi-berita"; // Class untuk konten artikel
+
+        // Loop dari tanggal "dari" hingga "sampai"
+        while ($dari->lte($sampai)) {
+            $formattedDate = $dari->format('d-m-Y');
+            $paginatedUrl = "$url{$formattedDate}";
+            try {
+                $response = Http::get($paginatedUrl);
+                dd($response->body());
+                if ($response->successful()) {
+                    $body = $response->body();
+                    $crawler = new Crawler($body);
+
+                    // Iterasi setiap item artikel
+                    $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
+                        $title = trim($node->text());
+
+                        // Terapkan filter judul
+                        if ($this->filterTitle($title)) {
+                            // Ambil link dan gambar
+                            $link = $node->filter('a')->attr('href');
+                            $gambar = $node->filter('img')->attr('src');
+
+                            $responseLinkNode = Http::get($link);
+
+                            if ($responseLinkNode->successful()) {
+                                $crawlerSec = new Crawler($responseLinkNode->body());
+                                $text = "";
+
+                                // Ambil konten artikel jika ada
+                                if ($crawlerSec->filter($classContent)->count() > 0) {
+                                    $text = $crawlerSec->filter($classContent)->text();
+                                }
+
+                                // Bersihkan konten dari tag HTML dan pola JavaScript
+                                $text = preg_replace([
+                                    '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/is',
+                                    '/\b(var|let|const)\s+\w+\s*=.*?;/is',
+                                    '/\bfunction\s+\w*\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bnew\s+\w+\([^)]*\);?/is',
+                                    '/\bif\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bwhile\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bfor\s*\([^)]*\)\s*{[^}]*}/is',
+                                    '/\bxhr\.[a-z]+\([^)]*\);/is',
+                                    '/\bconsole\.[a-z]+\([^)]*\);/is',
+                                    '/\breturn\b[^;]+;/is',
+                                    '/\bdocument\.[a-z]+\([^)]*\)\s*[^;]*;/is',
+                                    '/[a-zA-Z_$][\w$]*\.addEventListener\([^)]*\)\s*{[^}]*}/is',
+                                    '/}\s*else\s*{\s*}/is',
+                                    '/{\s*}/is'
+                                ], '', $text);
+                                $text = str_replace(" } });", "", $text);
+                                $text = strip_tags($text);
+                                $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                                // Simpan data ke hasil
+                                $results[] = [
+                                    "title" => $title,
+                                    "link" => $link,
+                                    "gambar" => $gambar,
+                                    "content" => $text,
+                                ];
+                            }
+                        }
+                    });
+                }
+            } catch (Exception $e) {
+                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+            }
+
+            // Tambah satu hari untuk iterasi berikutnya
+            $dari->addDay();
         }
 
         return $this->printAndDownload($results);

@@ -72,4 +72,9 @@ class ScrapperController extends CrawlerService
     {
         return view("moneykompas");
     }
+
+    public function rmid()
+    {
+        return view("rmid");
+    }
 }

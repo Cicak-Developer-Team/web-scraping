@@ -26,6 +26,7 @@
             <a href="{{ route('sindonews') }}" class="list-group-item list-group-item-action border">Sindonews</a>
             <a href="{{ route('boalsport') }}" class="list-group-item list-group-item-action border">Boalsport</a>
             <a href="{{ route('moneykompas') }}" class="list-group-item list-group-item-action border">Money.Kompas</a>
+            <a href="{{ route('rmid') }}" class="list-group-item list-group-item-action border">RM.id</a>
         </div>
     </div>
 

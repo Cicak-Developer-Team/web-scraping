@@ -82,4 +82,9 @@ class ScrapperController extends CrawlerService
     {
         return view("thejakartapost");
     }
+
+    public function surabayatribunnews()
+    {
+        return view("surabayatribunnews");
+    }
 }

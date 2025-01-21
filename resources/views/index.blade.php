@@ -29,6 +29,8 @@
             <a href="{{ route('rmid') }}" class="list-group-item list-group-item-action border">RM.id</a>
             <a href="{{ route('thejakartapost') }}"
                 class="list-group-item list-group-item-action border">Thejakartapost</a>
+            <a href="{{ route('surabayatribunnews') }}"
+                class="list-group-item list-group-item-action border">Surabaya.tribunnews</a>
         </div>
     </div>
 

@@ -25,7 +25,7 @@ class CrawlerService
         "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "Retreat",
+        "angin",
     ];
 
     public function scrape(Request $request)
@@ -1219,6 +1219,77 @@ class CrawlerService
                         }
                     });
                 }
+            } catch (Exception $e) {
+                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+            }
+        }
+
+        return $this->printAndDownload($results);
+    }
+
+    // Sesuai tahun
+    public function surabayatribunnewsScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        $urls = $request->url; // Menghapus trailing slash jika ada
+        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $results = [];
+
+        $classItem = ".isi li";      // Class untuk item artikel
+        $classContent = ".txt-article"; // Class untuk konten artikel
+
+        $offset = 0;
+        $articlesPerPage = 36; // Berdasarkan analisis URL
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $urls . $page;
+            try {
+                $response = Http::withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.5',
+                    'Referer' => 'https://www.google.com/',
+                ])->get($paginatedUrl);
+
+                $body = $response->body();
+                $crawler = new Crawler($body);
+                // Iterasi setiap item artikel
+                $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
+                    $title = trim($node->text());
+                    // Terapkan filter judul
+                    if ($this->filterTitle($title)) {
+                        // Ambil link dan gambar
+                        $link = $node->filter('a')->attr('href');
+                        $gambar = $node->filter('img')->attr('src');
+
+                        $responseLinkNode = Http::get($link);
+
+                        if ($responseLinkNode->successful()) {
+                            $crawlerSec = new Crawler($responseLinkNode->body());
+                            $text = "";
+
+                            // Ambil konten artikel jika ada
+                            if ($crawlerSec->filter($classContent)->count() > 0) {
+                                $text = $crawlerSec->filter($classContent)->text();
+                            }
+
+                            $text = strip_tags($text);
+                            $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                            // Simpan data ke hasil
+                            $results[] = [
+                                "title" => $title,
+                                "link" => $link,
+                                "gambar" => $gambar,
+                                "content" => $text,
+                            ];
+                        }
+                    }
+                });
+
+                $offset += $articlesPerPage;
             } catch (Exception $e) {
                 Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
             }

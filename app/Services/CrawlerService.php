@@ -22,10 +22,9 @@ class CrawlerService
         "Emisi Karbon",
         "Emisi CO2",
         "Emisi Gas Rumah Kaca",
-        "Hijau",
+        // "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "angin",
     ];
 
     public function scrape(Request $request)
@@ -1237,11 +1236,8 @@ class CrawlerService
         $loop = $request->loop; // Ambil jumlah halaman dari request
         $results = [];
 
-        $classItem = ".isi li";      // Class untuk item artikel
+        $classItem = ".ptb15";      // Class untuk item artikel
         $classContent = ".txt-article"; // Class untuk konten artikel
-
-        $offset = 0;
-        $articlesPerPage = 36; // Berdasarkan analisis URL
 
         for ($page = 1; $page <= $loop; $page++) {
             $paginatedUrl = $urls . $page;
@@ -1256,8 +1252,8 @@ class CrawlerService
                 $body = $response->body();
                 $crawler = new Crawler($body);
                 // Iterasi setiap item artikel
-                $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
-                    $title = trim($node->text());
+                $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginatedUrl) {
+                    $title = trim($node->filter("h3")->text());
                     // Terapkan filter judul
                     if ($this->filterTitle($title)) {
                         // Ambil link dan gambar
@@ -1288,8 +1284,6 @@ class CrawlerService
                         }
                     }
                 });
-
-                $offset += $articlesPerPage;
             } catch (Exception $e) {
                 Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
             }

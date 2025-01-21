@@ -87,4 +87,9 @@ class ScrapperController extends CrawlerService
     {
         return view("surabayatribunnews");
     }
+
+    public function sportsindonews()
+    {
+        return view("sportsindonews");
+    }
 }

@@ -30,7 +30,9 @@
             <a href="{{ route('thejakartapost') }}"
                 class="list-group-item list-group-item-action border">Thejakartapost</a>
             <a href="{{ route('surabayatribunnews') }}"
-                class="list-group-item list-group-item-action border">Surabaya.tribunnews</a>
+                class="list-group-item list-group-item-action border">Surabaya.Tribunnews</a>
+            <a href="{{ route('sportsindonews') }}"
+                class="list-group-item list-group-item-action border">Sport.Sindonews</a>
         </div>
     </div>
 

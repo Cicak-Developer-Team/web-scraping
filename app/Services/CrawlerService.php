@@ -25,7 +25,7 @@ class CrawlerService
         // "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "Nomor"
+        "saham"
     ];
 
     public function scrape(Request $request)
@@ -1422,6 +1422,95 @@ class CrawlerService
                         $text = strip_tags($text);
                         $text = trim(preg_replace('/\s+/', ' ', $text));
 
+                        // Simpan data ke hasil
+                        $results[] = [
+                            "title" => $title,
+                            "link" => $link,
+                            "gambar" => $gambar,
+                            "content" => $text,
+                        ];
+                    }
+                }
+            });
+        }
+
+        return $this->printAndDownload($results);
+    }
+
+    public function investorScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        // Mendapatkan input URL dan jumlah loop (jumlah halaman)
+        $urls = rtrim($request->url, '/'); // Pastikan tidak ada trailing slash
+        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $results = [];
+
+        $classItem = ".row.mb-4.position-relative"; // Class untuk item artikel
+        $classContent = ".body-content";           // Class untuk konten artikel
+        $baseUrl = "https://investor.id";
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $urls . ($page > 1 ? "/$page" : ""); // Tambahkan /2, /3, dst., untuk halaman kedua dan seterusnya
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.5',
+                'Referer' => 'https://www.google.com/',
+            ])->get($paginatedUrl);
+
+            $body = $response->body();
+            $crawler = new Crawler($body);
+
+            // Iterasi setiap item artikel
+            $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $baseUrl) {
+                $title = $node->filter("h4")->text();
+
+                // Terapkan filter judul
+                if ($this->filterTitle($title)) {
+                    $link = $baseUrl . $node->filter('a')->attr('href');
+                    $gambar = $node->filter('img')->attr('src');
+
+                    $responseLinkNode = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                        'Accept-Language' => 'en-US,en;q=0.5',
+                        'Referer' => 'https://www.google.com/',
+                    ])->get($link);
+
+                    if ($responseLinkNode->successful()) {
+                        $crawlerSec = new Crawler($responseLinkNode->body());
+                        $text = "";
+
+                        // Ambil konten dari halaman utama artikel
+                        if ($crawlerSec->filter($classContent)->count() > 0) {
+                            $text .= $crawlerSec->filter($classContent)->text();
+                        }
+
+                        // Iterasi untuk halaman tambahan dari konten artikel
+                        $navLink = $crawlerSec->filter($classContent)->filter(".mt-4.mb-4 a")->each(function ($nodeNav) use ($baseUrl) {
+                            return $baseUrl . $nodeNav->attr('href');
+                        });
+                        if (count($navLink) > 0) {
+                            unset($navLink[0]);
+                            unset($navLink[count($navLink)]);
+                            $navLink = collect($navLink)->flatten(1);
+                            $navLink->each(function ($link) use ($classContent, &$text) {
+                                $responseLinkNodeChild = Http::withHeaders([
+                                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                                    'Accept-Language' => 'en-US,en;q=0.5',
+                                    'Referer' => 'https://www.google.com/',
+                                ])->get($link);
+                                if ($responseLinkNodeChild->successful()) {
+                                    $crawlerSec = new Crawler($responseLinkNodeChild->body());
+                                    $text .= $crawlerSec->filter($classContent)->text();
+                                }
+                            });
+                        }
+
+                        $text = strip_tags($text);
+                        $text = trim(preg_replace('/\s+/', ' ', $text));
                         // Simpan data ke hasil
                         $results[] = [
                             "title" => $title,

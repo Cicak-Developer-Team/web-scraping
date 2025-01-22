@@ -97,4 +97,9 @@ class ScrapperController extends CrawlerService
     {
         return view("postkota");
     }
+
+    public function investor()
+    {
+        return view("investor");
+    }
 }

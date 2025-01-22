@@ -77,6 +77,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/postkota", "postkota")->name("postkota");
     Route::post("/postkotaScrape", "postkotaScrape")->name("postkotaScrape");
 
+    // investor
+    Route::get("/investor", "investor")->name("investor");
+    Route::post("/investorScrape", "investorScrape")->name("investorScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

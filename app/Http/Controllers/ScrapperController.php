@@ -102,4 +102,9 @@ class ScrapperController extends CrawlerService
     {
         return view("investor");
     }
+
+    public function skorid()
+    {
+        return view("skorid");
+    }
 }

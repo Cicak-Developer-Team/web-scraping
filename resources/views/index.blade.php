@@ -35,6 +35,7 @@
                 class="list-group-item list-group-item-action border">Sport.Sindonews</a>
             {{-- <a href="{{ route('postkota') }}" class="list-group-item list-group-item-action border">Postkota</a> --}}
             <a href="{{ route('investor') }}" class="list-group-item list-group-item-action border">Investor</a>
+            <a href="{{ route('skorid') }}" class="list-group-item list-group-item-action border">Skor.id</a>
         </div>
     </div>
 

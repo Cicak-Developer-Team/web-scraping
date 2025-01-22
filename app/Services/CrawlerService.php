@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\DomCrawler\Crawler;
 
+use function Pest\Laravel\json;
+
 class CrawlerService
 {
     protected $filter = [
@@ -25,7 +27,7 @@ class CrawlerService
         // "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "saham"
+        "indonesia"
     ];
 
     public function scrape(Request $request)
@@ -1523,6 +1525,55 @@ class CrawlerService
             });
         }
 
+        return $this->printAndDownload($results);
+    }
+
+    // json version
+    public function skoridScrape(Request $request)
+    {
+        // Hasil data yang akan dikembalikan
+        $url = $request->url;
+        $loop = $request->loop;
+        $results = [];
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $url . $page;
+            $response = Http::get($paginatedUrl);
+            $data = json_decode($response->body(), true)['data'];
+            // Iterasi setiap data untuk memproses title, gambar, dan content
+            foreach ($data as $item) {
+                $attributes = $item['attributes'];
+
+                // Ambil title
+                $title = $attributes['title'];
+
+                // Ambil gambar
+                $imageData = $attributes['cover']['image']['data'] ?? [];
+                $image = !empty($imageData) ? $imageData[0]['attributes']['url'] : null;
+
+                // Ambil content
+                $blocks = $attributes['blocks'] ?? [];
+                $content = '';
+                foreach ($blocks as $block) {
+                    if ($block['__component'] === 'shared.rich-text') {
+                        $content .= strip_tags($block['content']) . "\n"; // Hapus tag HTML
+                    }
+                }
+
+                // Simpan hasil
+                if ($this->filterTitle($title)) {
+                    $results[] = [
+                        "title" => $title,
+                        "link" => "",
+                        "gambar" => $image,
+                        'content' => trim($content)
+                    ];
+                }
+            }
+        }
+
+
+        // Return hasil
         return $this->printAndDownload($results);
     }
 }

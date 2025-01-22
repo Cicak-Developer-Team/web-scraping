@@ -33,6 +33,7 @@
                 class="list-group-item list-group-item-action border">Surabaya.Tribunnews</a>
             <a href="{{ route('sportsindonews') }}"
                 class="list-group-item list-group-item-action border">Sport.Sindonews</a>
+            {{-- <a href="{{ route('postkota') }}" class="list-group-item list-group-item-action border">Postkota</a> --}}
         </div>
     </div>
 

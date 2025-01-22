@@ -25,7 +25,7 @@ class CrawlerService
         // "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "indonesia"
+        "Nomor"
     ];
 
     public function scrape(Request $request)
@@ -1354,6 +1354,84 @@ class CrawlerService
             });
 
             $offset += $articlesPerPage;
+        }
+
+        return $this->printAndDownload($results);
+    }
+
+    public function postkotaScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        $urls = $request->url;
+        $loop = $request->loop;
+        $results = [];
+
+        $classItem = ".recent-item";       // Class untuk item artikel
+        $classContent = ".content__article"; // Class untuk konten artikel
+        $paginationSelector = "nav.pagination a"; // Selector untuk pagination dalam artikel
+
+
+        for ($page = 1; $page <= $loop; $page++) {
+            $paginatedUrl = $urls . $page;
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.5',
+                'Referer' => 'https://www.google.com/',
+            ])->get($paginatedUrl);
+
+            $body = $response->body();
+            $crawler = new Crawler($body);
+            // Iterasi setiap item artikel
+            $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginationSelector) {
+                $title = $node->filter(".desc-kanal")->text();
+
+                // Terapkan filter judul
+                if ($this->filterTitle($title)) {
+                    $link = $node->filter('a')->attr('href');
+                    $gambar = $node->filter('img')->attr('src');
+
+                    $responseLinkNode = Http::get($link);
+
+                    if ($responseLinkNode->successful()) {
+                        $crawlerSec = new Crawler($responseLinkNode->body());
+                        $text = "";
+
+                        // Ambil konten dari halaman utama artikel
+                        if ($crawlerSec->filter($classContent)->count() > 0) {
+                            $text .= $crawlerSec->filter($classContent)->text();
+                        }
+
+                        // Cek navigasi untuk halaman tambahan dalam artikel
+                        $crawlerSec->filter($paginationSelector)->each(function ($paginationNode) use (&$text, $classContent) {
+                            $nextPageUrl = $paginationNode->attr('href');
+                            $responseNextPage = Http::get($nextPageUrl);
+
+                            if ($responseNextPage->successful()) {
+                                $nextPageCrawler = new Crawler($responseNextPage->body());
+
+                                // Tambahkan konten dari halaman tambahan
+                                if ($nextPageCrawler->filter($classContent)->count() > 0) {
+                                    $text .= "\n" . $nextPageCrawler->filter($classContent)->text();
+                                }
+                            }
+                        });
+
+                        $text = strip_tags($text);
+                        $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                        // Simpan data ke hasil
+                        $results[] = [
+                            "title" => $title,
+                            "link" => $link,
+                            "gambar" => $gambar,
+                            "content" => $text,
+                        ];
+                    }
+                }
+            });
         }
 
         return $this->printAndDownload($results);

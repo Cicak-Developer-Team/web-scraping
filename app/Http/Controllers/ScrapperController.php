@@ -92,4 +92,9 @@ class ScrapperController extends CrawlerService
     {
         return view("sportsindonews");
     }
+
+    public function postkota()
+    {
+        return view("postkota");
+    }
 }

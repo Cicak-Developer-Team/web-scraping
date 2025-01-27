@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\DomCrawler\Crawler;
 
-use function Pest\Laravel\json;
-
 class CrawlerService
 {
     protected $filter = [
@@ -24,7 +22,7 @@ class CrawlerService
         "Emisi Karbon",
         "Emisi CO2",
         "Emisi Gas Rumah Kaca",
-        // "Hijau",
+        "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
     ];
@@ -306,7 +304,6 @@ class CrawlerService
         return $this->printAndDownload($results);
     }
 
-
     public function republikaScrape(Request $request)
     {
         set_time_limit(0);
@@ -457,67 +454,80 @@ class CrawlerService
     {
         set_time_limit(0);
 
-        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        // Mendapatkan input URL dan rentang tanggal
         $urls = $request->url;
-        $loop = $request->loop;
+        $dari = Carbon::parse($request->dari);
+        $sampai = Carbon::parse($request->sampai);
+        $selisihHari = $dari->diffInDays($sampai);
         $results = [];
 
         $starPage = 0;
         $classItem = '.list-berita ul li';
+        for ($i = 0; $i <= $selisihHari; $i++) {
+            $currentDate = $dari->copy()->addDays($i);
+            $urls = str_replace(
+                ["[tahun]", "[bulan]", "[tanggal]"],
+                [$currentDate->format('Y'), $currentDate->format('m'), $currentDate->format('d')],
+                $urls
+            );
+            while (true) {
+                $paginatedUrl = $urls . $starPage;
+                try {
+                    $response = Http::get($paginatedUrl);
 
-        for ($page = 1; $page <= $loop; $page++) {
-            $paginatedUrl = $urls . $starPage;
-
-            try {
-                $response = Http::get($paginatedUrl);
-
-                if ($response->successful()) {
-                    $body = $response->body();
-                    $crawler = new Crawler($body);
-
-                    $crawler->filter($classItem)->each(function ($node) use (&$results) {
-                        $title = trim($node->text());
-
-                        if ($this->filterTitle($title)) {
-                            $link = $node->filter('a')->attr('href');
-                            $gambar = $node->filter('img')->attr('src');
-
-                            $responseLinkNode = Http::get($link);
-                            if ($responseLinkNode->successful()) {
-                                $crawlerSec = new Crawler($responseLinkNode->body());
-                                $text = "";
-
-                                if ($crawlerSec->filter('.tmpt-desk-kon')->count() > 0) {
-                                    $text = $crawlerSec->filter('.tmpt-desk-kon')->text();
-                                } else if ($crawlerSec->filter('#release-content')->count() > 0) {
-                                    $text = $crawlerSec->filter('#release-content')->text();
-                                } else if ($crawlerSec->filter('.ctn')->count() > 0) {
-                                    $text = $crawlerSec->filter('.ctn')->text();
-                                }
-
-                                $text = str_replace(' } });', '', $text);
-                                $text = strip_tags($text);
-                                $text = trim(preg_replace('/\s+/', ' ', $text));
-
-                                $results[] = [
-                                    "title" => $title,
-                                    "link" => $link,
-                                    "gambar" => $gambar,
-                                    "content" => $text
-                                ];
-                            }
+                    if ($response->successful()) {
+                        $body = $response->body();
+                        $crawler = new Crawler($body);
+                        if ($crawler->filter($classItem)->count() == 0) {
+                            break; // Berhenti jika tidak ada elemen yang ditemukan
                         }
-                    });
-                }
-            } catch (Exception $e) {
-                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
-            }
 
-            $starPage += 20;
+                        $crawler->filter($classItem)->each(function ($node) use (&$results) {
+                            $title = trim($node->filter("h1 a")->text());
+
+                            if ($this->filterTitle($title)) {
+                                $link = $node->filter('a')->attr('href');
+                                $gambar = $node->filter('img')->attr('src');
+
+                                $responseLinkNode = Http::get($link);
+                                if ($responseLinkNode->successful()) {
+                                    $crawlerSec = new Crawler($responseLinkNode->body());
+                                    $text = "";
+
+                                    if ($crawlerSec->filter('.tmpt-desk-kon')->count() > 0) {
+                                        $text = $crawlerSec->filter('.tmpt-desk-kon')->text();
+                                    } else if ($crawlerSec->filter('#release-content')->count() > 0) {
+                                        $text = $crawlerSec->filter('#release-content')->text();
+                                    } else if ($crawlerSec->filter('.ctn')->count() > 0) {
+                                        $text = $crawlerSec->filter('.ctn')->text();
+                                    }
+
+                                    $text = str_replace(' } });', '', $text);
+                                    $text = strip_tags($text);
+                                    $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                                    $results[] = [
+                                        "title" => $title,
+                                        "link" => $link,
+                                        "gambar" => $gambar,
+                                        "content" => $text
+                                    ];
+                                }
+                            }
+                        });
+                    }
+                } catch (Exception $e) {
+                    Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+                    break; // Hentikan jika terjadi kesalahan
+                }
+
+                $starPage += 20;
+            }
         }
 
         return $this->printAndDownload($results);
     }
+
 
     public function bisnisScrape(Request $request)
     {

@@ -26,12 +26,18 @@
                         @csrf
                         <div class="mb-3">
                             <label class="form-label">Masukkan URL</label>
-                            <input type="text" id="form-url" readonly value="https://www.bisnis.com/index?page="
+                            <input type="text" id="form-url" readonly
+                                value="https://www.bisnis.com/index?categoryId=0&type=indeks&date=[tahun]-[bulan]-[tanggal]&page="
                                 class="form-control" name="url">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Jumlah Halaman (Loop)</label>
-                            <input type="number" id="form-loop" class="form-control" name="loop" min="1"
+                            <label class="form-label">Dari</label>
+                            <input type="date" id="form-dari" class="form-control" name="dari" min="1"
+                                value="10">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sampai</label>
+                            <input type="date" id="form-sampai" class="form-control" name="sampai" min="1"
                                 value="10">
                         </div>
                         <div class="mb-3">

@@ -528,43 +528,53 @@ class CrawlerService
         return $this->printAndDownload($results);
     }
 
-
     public function bisnisScrape(Request $request)
     {
         set_time_limit(0);
-        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+
+        // Mendapatkan input URL, tanggal dari, dan tanggal sampai
         $urls = $request->url;
-        $loop = $request->loop;
+        $dari = Carbon::parse($request->dari);
+        $sampai = Carbon::parse($request->sampai);
         $results = [];
 
         $classItem = '.artItem';
         $classContent = '.detailsContent';
 
-        for ($page = 1; $page <= $loop; $page++) {
-            $paginatedUrl = $urls . $page;
+        // Hitung selisih hari
+        $selisihHari = $dari->diffInDays($sampai);
 
-            try {
+        // Looping berdasarkan selisih hari
+        for ($i = 0; $i <= $selisihHari; $i++) {
+            $currentDate = $dari->copy()->addDays($i);
+            $formattedUrl = str_replace(
+                ["[tahun]", "[bulan]", "[tanggal]"],
+                [$currentDate->format('Y'), $currentDate->format('m'), $currentDate->format('d')],
+                $urls
+            );
+
+            $page = 1;
+            while (true) {
+                $paginatedUrl = $formattedUrl . $page;
+
                 $response = Http::get($paginatedUrl);
-
                 if ($response->successful()) {
                     $body = $response->body();
                     $crawler = new Crawler($body);
 
+                    if ($crawler->filter($classItem)->count() == 0) {
+                        break; // Jika tidak ada artikel ditemukan, keluar dari while
+                    }
                     $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
-                        $title = trim($node->text());
-
+                        $title = $node->filter('.artTitle')->text();
                         if ($this->filterTitle($title)) {
                             $link = $node->filter('a')->attr('href');
-                            $gambar = $node->filter('img')->attr('src');
+                            $gambar = $node->filter('img')->count() > 0 ? $node->filter('img')->attr('src') : '';
 
                             $responseLinkNode = Http::get($link);
                             if ($responseLinkNode->successful()) {
                                 $crawlerSec = new Crawler($responseLinkNode->body());
-                                $text = "";
-
-                                if ($crawlerSec->filter($classContent)->count() > 0) {
-                                    $text = $crawlerSec->filter($classContent)->text();
-                                }
+                                $text = $crawlerSec->filter($classContent)->count() > 0 ? $crawlerSec->filter($classContent)->text() : '';
 
                                 $text = str_replace(' } });', '', $text);
                                 $text = strip_tags($text);
@@ -580,17 +590,12 @@ class CrawlerService
                         }
                     });
                 }
-            } catch (Exception $e) {
-                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+                $page++;
             }
         }
-
-        if (empty($results)) {
-            dd(response()->json(['message' => 'Tidak ada konten yang mengandung kata dari filter'], 404));
-        }
-
         return $this->printAndDownload($results);
     }
+
 
     public function pikiranrakyatScrape(Request $request)
     {

@@ -107,4 +107,9 @@ class ScrapperController extends CrawlerService
     {
         return view("skorid");
     }
+
+    public function gayotribunnews()
+    {
+        return view("gayotribunnews");
+    }
 }

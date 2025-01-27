@@ -81,10 +81,13 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/investor", "investor")->name("investor");
     Route::post("/investorScrape", "investorScrape")->name("investorScrape");
 
-
     // skorid
     Route::get("/skorid", "skorid")->name("skorid");
     Route::post("/skoridScrape", "skoridScrape")->name("skoridScrape");
+
+    // skorid
+    Route::get("/gayotribunnews", "gayotribunnews")->name("gayotribunnews");
+    Route::post("/gayotribunnewsScrape", "gayotribunnewsScrape")->name("gayotribunnewsScrape");
 
     // func
     Route::post("/scrape", "scrape")->name("scrape");

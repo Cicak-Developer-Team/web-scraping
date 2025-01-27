@@ -223,84 +223,89 @@ class CrawlerService
     {
         set_time_limit(0);
 
-        // Mendapatkan input URL, class container, dan jumlah loop (jumlah halaman)
+        // Mendapatkan input URL, class container, dan rentang tanggal
         $urls = $request->url;
-        $loop = $request->loop; // Ambil jumlah halaman dari request
+        $dari = Carbon::parse($request->dari);
+        $sampai = Carbon::parse($request->sampai);
+
+        // Hitung selisih hari antara dari dan sampai
+        $selisihHari = $dari->diffInDays($sampai);
         $results = [];
 
         $classItem = ".articleItem";      // Class untuk item artikel
         $classContent = ".read__content"; // Class untuk konten artikel
 
-        for ($page = 1; $page <= $loop; $page++) {
-            $paginatedUrl = $urls . $page;
+        for ($i = 0; $i <= $selisihHari; $i++) {
+            $currentDate = $dari->copy()->addDays($i);
+            $formattedUrl = str_replace(
+                ["[tahun]", "[bulan]", "[tanggal]"],
+                [$currentDate->format('Y'), $currentDate->format('m'), $currentDate->format('d')],
+                $urls
+            );
 
-            try {
-                $response = Http::get($paginatedUrl);
+            $page = 1;
+            while (true) {
+                $paginatedUrl = $formattedUrl . $page;
 
-                if ($response->successful()) {
-                    $body = $response->body();
-                    $crawler = new Crawler($body);
+                try {
+                    $response = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                        'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9',
+                        'Accept-Language' => 'en-US,en;q=0.5',
+                        'Referer' => 'https://www.google.com/',
+                    ])->get($paginatedUrl);
 
-                    // Iterasi setiap item artikel
-                    $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
-                        $title = trim($node->text());
+                    if ($response->successful()) {
+                        $body = $response->body();
+                        $crawler = new Crawler($body);
 
-                        // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
-                            // Ambil link dan gambar
-                            $link = $node->filter('a')->attr('href');
-                            $gambar = $node->filter('img')->attr('src');
+                        if ($crawler->filter($classItem)->count() > 0) {
+                            $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
+                                $title = trim($node->text());
 
-                            $responseLinkNode = Http::get($link);
+                                // Terapkan filter judul
+                                if ($this->filterTitle($title)) {
+                                    $link = $node->filter('a')->attr('href');
+                                    $gambar = $node->filter('img')->attr('src');
 
-                            if ($responseLinkNode->successful()) {
-                                $crawlerSec = new Crawler($responseLinkNode->body());
-                                $text = "";
+                                    $responseLinkNode = Http::get($link);
+                                    if ($responseLinkNode->successful()) {
+                                        $crawlerSec = new Crawler($responseLinkNode->body());
+                                        $text = "";
 
-                                // Ambil konten artikel jika ada
-                                if ($crawlerSec->filter($classContent)->count() > 0) {
-                                    $text = $crawlerSec->filter($classContent)->text();
+                                        if ($crawlerSec->filter($classContent)->count() > 0) {
+                                            $text = $crawlerSec->filter($classContent)->text();
+                                        }
+
+                                        // Bersihkan konten
+                                        $text = strip_tags($text);
+                                        $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                                        $results[] = [
+                                            "title" => $title,
+                                            "link" => $link,
+                                            "gambar" => $gambar,
+                                            "content" => $text,
+                                        ];
+                                    }
                                 }
-
-                                // Bersihkan konten dari tag HTML dan pola JavaScript
-                                $text = preg_replace([
-                                    '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/is',
-                                    '/\b(var|let|const)\s+\w+\s*=.*?;/is',
-                                    '/\bfunction\s+\w*\s*\([^)]*\)\s*{[^}]*}/is',
-                                    '/\bnew\s+\w+\([^)]*\);?/is',
-                                    '/\bif\s*\([^)]*\)\s*{[^}]*}/is',
-                                    '/\bwhile\s*\([^)]*\)\s*{[^}]*}/is',
-                                    '/\bfor\s*\([^)]*\)\s*{[^}]*}/is',
-                                    '/\bxhr\.[a-z]+\([^)]*\);/is',
-                                    '/\bconsole\.[a-z]+\([^)]*\);/is',
-                                    '/\breturn\b[^;]+;/is',
-                                    '/\bdocument\.[a-z]+\([^)]*\)\s*[^;]*;/is',
-                                    '/[a-zA-Z_$][\w$]*\.addEventListener\([^)]*\)\s*{[^}]*}/is',
-                                    '/}\s*else\s*{\s*}/is',
-                                    '/{\s*}/is'
-                                ], '', $text);
-                                $text = str_replace(" } });", "", $text);
-                                $text = strip_tags($text);
-                                $text = trim(preg_replace('/\s+/', ' ', $text));
-
-                                // Simpan data ke hasil
-                                $results[] = [
-                                    "title" => $title,
-                                    "link" => $link,
-                                    "gambar" => $gambar,
-                                    "content" => $text,
-                                ];
-                            }
+                            });
+                        } else {
+                            break;
                         }
-                    });
+                    }
+                } catch (Exception $e) {
+                    Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+                    break;
                 }
-            } catch (Exception $e) {
-                Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
+
+                $page++;
             }
         }
 
         return $this->printAndDownload($results);
     }
+
 
     public function republikaScrape(Request $request)
     {

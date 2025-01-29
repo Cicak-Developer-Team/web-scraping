@@ -12,7 +12,6 @@ class ScrapperController extends CrawlerService
         return view("index");
     }
 
-
     public function kompas()
     {
         return view('kompas');

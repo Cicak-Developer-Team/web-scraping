@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ScrapperController;
 use Illuminate\Support\Facades\Route;
+use App\Services\KompasScrape;
 
 Route::controller(ScrapperController::class)->group(function () {
     // view
@@ -9,9 +10,12 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::post("/print", "print")->name("print");
     Route::get("/scrape-dynamic", "scrapeDynamicIndex")->name("scrape-dynamic-index");
 
+
     // kompas
-    Route::get("/kompas", "kompas")->name("kompas");
-    Route::post("/kompasScrape", "KompasScrape")->name("KompasScrape");
+    Route::controller(KompasScrape::class)->group(function () {
+        Route::get("/kompas", "kompas")->name("kompas");
+        Route::post("/kompasScrape", "kompasScrape")->name("KompasScrape");
+    });
 
     // Republika
     Route::get("/republika", "republika")->name("republika");

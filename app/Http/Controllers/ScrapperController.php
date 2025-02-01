@@ -4,17 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Services\CrawlerService;
 
-class ScrapperController extends CrawlerService
+class ScrapperController
 {
 
     public function index()
     {
         return view("index");
-    }
-
-    public function kompas()
-    {
-        return view('kompascom');
     }
 
     public function republika()

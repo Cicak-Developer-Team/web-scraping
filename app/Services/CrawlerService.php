@@ -13,7 +13,7 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class CrawlerService
 {
-    protected $filter = [
+    public $filter = [
         "Keberlanjutan Lingkungan",
         "Etika Lingkungan",
         "Rendah Karbon",
@@ -162,7 +162,8 @@ class CrawlerService
     {
         return Excel::download(new UsersExport($data), time() . '.xlsx');
     }
-    private function processPageContent(string $body, array &$results, string $classItem, string $classContent): void
+
+    private function processPageContent(string $body, array &$results, string $classItem, string $classContent)
     {
         $crawler = new Crawler($body);
 
@@ -176,7 +177,7 @@ class CrawlerService
         });
     }
 
-    private function processNode(Crawler $node, array &$results, string $classContent): void
+    private function processNode(Crawler $node, array &$results, string $classContent)
     {
         try {
             $link = $node->filter('a')->attr('href');
@@ -199,111 +200,50 @@ class CrawlerService
         }
     }
 
-    private function cleanText(string $text): string
+    public function cleanText(string $text)
     {
         $text = str_replace(' } });', '', $text);
         $text = htmlspecialchars_decode(strip_tags($text));
         return trim(preg_replace('/\s+/', ' ', $text));
     }
 
-    protected function filterTitle($title)
+    public function filterTitle($title)
     {
+        // Pastikan filter sudah didefinisikan dan title adalah string
+        if (!isset($this->filter) || !is_array($this->filter) || !is_string($title)) {
+            return false;
+        }
+
         foreach ($this->filter as $keyword) {
-            if (stripos($title, $keyword) !== false) {
-                return true; // Jika title mengandung salah satu kata kunci, ambil data
+            if (!empty($keyword) && stripos($title, $keyword) !== false) {
+                return true; // Jika title mengandung kata kunci, simpan
             }
         }
-        return false; // Jika tidak ada kata kunci yang ditemukan, lewati data
+
+        return false; // Jika tidak ada kata kunci yang cocok, lewati
     }
 
-    // web scrape
-    public function KompasScrape(Request $request)
+    /**
+     * Generate URL berdasarkan rentang tanggal.
+     */
+    public function generateUrls($baseUrl, $dari, $sampai)
     {
-        set_time_limit(0);
-
-        // Mendapatkan input URL, class container, dan rentang tanggal
-        $urls = $request->url;
-        $dari = Carbon::parse($request->dari);
-        $sampai = Carbon::parse($request->sampai);
-
-        // Hitung selisih hari antara dari dan sampai
+        $urls = [];
         $selisihHari = $dari->diffInDays($sampai);
-        $results = [];
-
-        $classItem = ".articleItem";      // Class untuk item artikel
-        $classContent = ".read__content"; // Class untuk konten artikel
 
         for ($i = 0; $i <= $selisihHari; $i++) {
             $currentDate = $dari->copy()->addDays($i);
-            $formattedUrl = str_replace(
+            $urls[] = str_replace(
                 ["[tahun]", "[bulan]", "[tanggal]"],
                 [$currentDate->format('Y'), $currentDate->format('m'), $currentDate->format('d')],
-                $urls
+                $baseUrl
             );
-
-            $page = 1;
-            while (true) {
-                $paginatedUrl = $formattedUrl . $page;
-
-                try {
-                    $response = Http::withHeaders([
-                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                        'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9',
-                        'Accept-Language' => 'en-US,en;q=0.5',
-                        'Referer' => 'https://www.google.com/',
-                    ])->get($paginatedUrl);
-
-                    if ($response->successful()) {
-                        $body = $response->body();
-                        $crawler = new Crawler($body);
-
-                        if ($crawler->filter($classItem)->count() > 0) {
-                            $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
-                                $title = trim($node->text());
-
-                                // Terapkan filter judul
-                                if ($this->filterTitle($title)) {
-                                    $link = $node->filter('a')->attr('href');
-                                    $gambar = $node->filter('img')->attr('src');
-
-                                    $responseLinkNode = Http::get($link);
-                                    if ($responseLinkNode->successful()) {
-                                        $crawlerSec = new Crawler($responseLinkNode->body());
-                                        $text = "";
-
-                                        if ($crawlerSec->filter($classContent)->count() > 0) {
-                                            $text = $crawlerSec->filter($classContent)->text();
-                                        }
-
-                                        // Bersihkan konten
-                                        $text = strip_tags($text);
-                                        $text = trim(preg_replace('/\s+/', ' ', $text));
-
-                                        $results[] = [
-                                            "title" => $title,
-                                            "link" => $link,
-                                            "gambar" => $gambar,
-                                            "content" => $text,
-                                        ];
-                                    }
-                                }
-                            });
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (Exception $e) {
-                    Log::error("Error fetching URL: {$paginatedUrl}", ['error' => $e->getMessage()]);
-                    break;
-                }
-
-                $page++;
-            }
         }
 
-        return $this->printAndDownload($results);
+        return $urls;
     }
 
+    // web scrape
     public function republikaScrape(Request $request)
     {
         set_time_limit(0);

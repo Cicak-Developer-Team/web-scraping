@@ -90,9 +90,13 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/skorid", "skorid")->name("skorid");
     Route::post("/skoridScrape", "skoridScrape")->name("skoridScrape");
 
-    // skorid
+    // gayotribunnews
     Route::get("/gayotribunnews", "gayotribunnews")->name("gayotribunnews");
     Route::post("/gayotribunnewsScrape", "gayotribunnewsScrape")->name("gayotribunnewsScrape");
+
+    // googlesearch
+    Route::get("/googlesearch", "googlesearch")->name("googlesearch");
+    Route::post("/googlesearchScrape", "googlesearchScrape")->name("googlesearchScrape");
 
     // func
     Route::post("/scrape", "scrape")->name("scrape");

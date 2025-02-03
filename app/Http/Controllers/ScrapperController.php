@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\CrawlerService;
 
-class ScrapperController
+class ScrapperController extends CrawlerService
 {
 
     public function index()
@@ -105,5 +105,10 @@ class ScrapperController
     public function gayotribunnews()
     {
         return view("gayotribunnews");
+    }
+
+    public function googlesearch()
+    {
+        return view("googlesearch");
     }
 }

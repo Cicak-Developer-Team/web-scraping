@@ -5,45 +5,77 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Scrapper Tools - BaharDev :3</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            border: none;
+        }
+
+        .card a {
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            transition: all 0.3s ease-in-out;
+            text-align: center;
+        }
+
+        .card a:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        *::-webkit-scrollbar {
+            width: 0px;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container vh-100 d-flex flex-column justify-content-center align-items-center">
+    <div class="py-4 container vh-100 d-flex flex-column justify-content-center align-items-center">
         <h1 class="text-center mb-4">Welcome to Scrapper Tools</h1>
-        <div class="list-group list-group-flush" style="min-width: 20vw">
-            <a href="{{ route('kompas') }}" class="list-group-item list-group-item-action border">Kompas</a>
-            <a href="{{ route('republika') }}" class="list-group-item list-group-item-action border">Republika</a>
-            <a href="{{ route('okezone') }}" class="list-group-item list-group-item-action border">Okezone</a>
-            <a href="{{ route('kontan') }}" class="list-group-item list-group-item-action border">Kontan</a>
-            <a href="{{ route('bisnis') }}" class="list-group-item list-group-item-action border">Bisnis</a>
-            {{-- <a href="{{ route('pikiranrakyat') }}" class="list-group-item list-group-item-action border">Pikiran
-                Rakyat</a> --}}
-            <a href="{{ route('mediaindo') }}" class="list-group-item list-group-item-action border">Media Indo</a>
-            {{-- <a href="{{ route('jawa') }}" class="list-group-item list-group-item-action border">Jawapos</a> --}}
-            <a href="{{ route('detiksport') }}" class="list-group-item list-group-item-action border">Detik Sport</a>
-            <a href="{{ route('sindonews') }}" class="list-group-item list-group-item-action border">Sindonews</a>
-            <a href="{{ route('boalsport') }}" class="list-group-item list-group-item-action border">Boalsport</a>
-            <a href="{{ route('moneykompas') }}" class="list-group-item list-group-item-action border">Money.Kompas</a>
-            <a href="{{ route('rmid') }}" class="list-group-item list-group-item-action border">RM.id</a>
-            <a href="{{ route('thejakartapost') }}"
-                class="list-group-item list-group-item-action border">Thejakartapost</a>
-            <a href="{{ route('surabayatribunnews') }}"
-                class="list-group-item list-group-item-action border">Surabaya.Tribunnews</a>
-            <a href="{{ route('sportsindonews') }}"
-                class="list-group-item list-group-item-action border">Sport.Sindonews</a>
-            {{-- <a href="{{ route('postkota') }}" class="list-group-item list-group-item-action border">Postkota</a> --}}
-            <a href="{{ route('investor') }}" class="list-group-item list-group-item-action border">Investor</a>
-            <a href="{{ route('skorid') }}" class="list-group-item list-group-item-action border">Skor.id</a>
-            <a href="{{ route('gayotribunnews') }}"
-                class="list-group-item list-group-item-action border">Gayo.Tribunnews</a>
+        <div class="card p-3 overflow-auto" style="min-width: 20vw">
+            <a href="{{ route('googlesearch') }}">Google Search</a>
+            <a href="{{ route('kompas') }}">Kompas</a>
+            <a href="{{ route('republika') }}">Republika</a>
+            <a href="{{ route('okezone') }}">Okezone</a>
+            <a href="{{ route('kontan') }}">Kontan</a>
+            <a href="{{ route('bisnis') }}">Bisnis</a>
+            <a href="{{ route('mediaindo') }}">Media Indo</a>
+            <a href="{{ route('detiksport') }}">Detik Sport</a>
+            <a href="{{ route('sindonews') }}">Sindonews</a>
+            <a href="{{ route('boalsport') }}">Boalsport</a>
+            <a href="{{ route('moneykompas') }}">Money.Kompas</a>
+            <a href="{{ route('rmid') }}">RM.id</a>
+            <a href="{{ route('thejakartapost') }}">The Jakarta Post</a>
+            <a href="{{ route('surabayatribunnews') }}">Surabaya Tribunnews</a>
+            <a href="{{ route('sportsindonews') }}">Sport Sindonews</a>
+            <a href="{{ route('investor') }}">Investor</a>
+            <a href="{{ route('skorid') }}">Skor.id</a>
+            <a href="{{ route('gayotribunnews') }}">Gayo Tribunnews</a>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

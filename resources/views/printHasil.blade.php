@@ -1,20 +1,22 @@
-<table>
-    <thead>
-        <tr>
-            <th>NO</th>
-            <th>JUDUL</th>
-            <th>GAMBAR</th>
-            <th>ARTIKEL</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($data as $key => $item)
+@if (!empty($data) && is_array($data))
+    <table>
+        <thead>
             <tr>
-                <td>{{ $key + 1 }}</td>
-                <td>{{ $item['title'] }}</td>
-                <td>{{ $item['gambar'] }}</td>
-                <td>{{ $item['content'] }}</td>
+                @foreach (array_keys($data[0]) as $key)
+                    <th>{{ ucfirst($key) }}</th>
+                @endforeach
             </tr>
-        @endforeach
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach ($data as $item)
+                <tr>
+                    @foreach ($item as $value)
+                        <td>{{ $value }}</td>
+                    @endforeach
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <p>Tidak ada data tersedia.</p>
+@endif

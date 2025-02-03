@@ -56,9 +56,9 @@ class KompasScrape extends CrawlerService
     private function extractArticleData($node)
     {
         $title = trim($node->text());
-        // if (!$this->filterTitle($title)) {
-        //     return null;
-        // }
+        if (!$this->filterTitle($title)) {
+            return null;
+        }
 
         $link = $node->filter('a')->attr('href');
         $gambar = $node->filter('img')->attr('src');
@@ -118,7 +118,7 @@ class KompasScrape extends CrawlerService
                 $paginatedUrls = array_map(fn($p) => $formattedUrl . $p, range($page, $page + 4));
 
                 // Cache hasil scraping agar tidak mengambil data yang sama
-                $cachedResults = Cache::remember("scrape:" . md5(implode(',', $paginatedUrls)), now()->addHours(6), function () use ($paginatedUrls) {
+                $cachedResults = Cache::remember("scrape:" . md5($urls), now()->addMinutes(30), function () use ($paginatedUrls) {
                     return $this->scrapePages($paginatedUrls);
                 });
 

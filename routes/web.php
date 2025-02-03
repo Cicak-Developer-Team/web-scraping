@@ -3,6 +3,7 @@
 use App\Http\Controllers\ScrapperController;
 use Illuminate\Support\Facades\Route;
 use App\Services\KompasScrape;
+use App\Services\RepublikaScrape;
 
 Route::controller(ScrapperController::class)->group(function () {
     // view

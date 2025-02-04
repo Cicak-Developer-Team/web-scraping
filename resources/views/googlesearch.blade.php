@@ -29,8 +29,8 @@
                             <input type="text" class="form-control" name="keyword">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Jumlah Item</label>
-                            <input type="number" id="form-jumlahItem" class="form-control" name="jumlahItem"
+                            <label class="form-label">Jumlah Halaman</label>
+                            <input type="number" id="form-jumlahHalaman" class="form-control" name="jumlahHalaman"
                                 value="10">
                         </div>
 

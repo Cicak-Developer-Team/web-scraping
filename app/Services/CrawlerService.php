@@ -1662,63 +1662,56 @@ class CrawlerService
     public function googlesearchScrape(Request $request)
     {
         set_time_limit(0);
-        // Ambil keyword dari request
-        $keyword = $request->input('keyword');
-
-        // API Key dan Search Engine ID (ganti dengan milik Anda)
+        $keyword = $request->keyword;
         $apiKey = env("GOOGLE_SEARCH_API");
         $searchEngineId = 'e50fbd3bd9bef45f6';
-        $jumlahItem = $request->jumlahItem;
+        $jumlahHalaman = (int) $request->jumlahHalaman;
 
-        // URL Google Custom Search API
         $url = "https://www.googleapis.com/customsearch/v1";
-        // Parameter untuk request
-        $params = [
-            'key' => $apiKey,
-            'cx' => $searchEngineId,
-            'q' => $keyword, // Keyword pencarian
-            'num' => $jumlahItem, // Jumlah hasil yang ingin ditampilkan
-        ];
-
-        // Inisialisasi Guzzle Client
         $client = new Client();
-
-        // Lakukan request ke Google Custom Search API
+        $results = [];
         try {
-            $response = $client->get($url, ['query' => $params]);
-            $data = json_decode($response->getBody(), true);
-            // Format hasil pencarian
-            $results = [];
-            if (isset($data['items'])) {
-                foreach ($data['items'] as $key => $item) {
-                    $link = $item['link'];
-                    $content = "";
-                    $response = Http::withHeaders([
-                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                        'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                        'Accept-Language' => 'en-US,en;q=0.5',
-                        'Referer' => 'https://www.google.com/',
-                    ])->get($link);
-                    if ($response->successful()) {
-                        $body = $response->body();
-                        $crawler = new Crawler($body);
-                        $crawler->filter("p")->each(function ($node) use (&$content) {
-                            $content .= $node->text();
-                        });
-                    } else {
-                        continue;
-                    }
+            for ($i = 0; $i < $jumlahHalaman; $i++) {
+                $params = [
+                    'key' => $apiKey,
+                    'cx' => $searchEngineId,
+                    'q' => $keyword,
+                    'num' => 10,
+                    'start' => ($i * 10) + 1, // Halaman ke-X dimulai dari item ke-X
+                ];
 
-                    $item['content'] = $content;
-                    unset($item["pagemap"]);
-                    $results[] = $item;
+                $response = $client->get($url, ['query' => $params]);
+                $data = json_decode($response->getBody(), true);
+
+                if (isset($data['items'])) {
+                    foreach ($data['items'] as $key => $item) {
+                        $link = $item['link'];
+                        $content = "";
+
+                        // $response = Http::withHeaders([
+                        //     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        //     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                        //     'Accept-Language' => 'en-US,en;q=0.5',
+                        //     'Referer' => 'https://www.google.com/',
+                        // ])->get($link);
+
+                        // if ($response->successful()) {
+                        //     $body = $response->body();
+                        //     $crawler = new Crawler($body);
+                        //     $crawler->filter("p")->each(function ($node) use (&$content) {
+                        //         $content .= $node->text();
+                        //     });
+                        // }
+
+                        // $item['content'] = $content;
+                        unset($item['pagemap']);
+                        $results[] = $item;
+                    }
                 }
             }
-            // Kembalikan hasil pencarian
             return $this->printAndDownload($results);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            // Handle error
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }

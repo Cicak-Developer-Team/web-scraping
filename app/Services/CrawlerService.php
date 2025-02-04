@@ -1684,27 +1684,37 @@ class CrawlerService
                 $data = json_decode($response->getBody(), true);
 
                 if (isset($data['items'])) {
-                    foreach ($data['items'] as $key => $item) {
+                    foreach ($data['items'] as $item) {
                         $link = $item['link'];
                         $content = "";
-
-                        // $response = Http::withHeaders([
-                        //     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                        //     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                        //     'Accept-Language' => 'en-US,en;q=0.5',
-                        //     'Referer' => 'https://www.google.com/',
-                        // ])->get($link);
-
-                        // if ($response->successful()) {
-                        //     $body = $response->body();
-                        //     $crawler = new Crawler($body);
-                        //     $crawler->filter("p")->each(function ($node) use (&$content) {
-                        //         $content .= $node->text();
-                        //     });
-                        // }
-
-                        // $item['content'] = $content;
+                        $title = "";
                         unset($item['pagemap']);
+
+                        $response = Http::withHeaders([
+                            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                            'Accept-Language' => 'en-US,en;q=0.5',
+                            'Referer' => 'https://www.google.com/',
+                        ])->get($link);
+
+                        if ($response->successful()) {
+                            $body = $response->body();
+                            $crawler = new Crawler($body);
+                            $crawler->filter("p")->each(function ($node) use (&$content) {
+                                $content .= $node->text();
+                            });
+
+                            if ($crawler->filter("h1")->count() > 0) {
+                                $title = $crawler->filter("h1")->text();
+                            } elseif ($crawler->filter("h2")->count() > 0) {
+                                $title = $crawler->filter("h2")->text();
+                            } elseif ($crawler->filter("h3")->count() > 0) {
+                                $title = $crawler->filter("h3")->text();
+                            }
+                        }
+
+                        $item['title'] = $title;
+                        $item['content'] = $content;
                         $results[] = $item;
                     }
                 }

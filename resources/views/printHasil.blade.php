@@ -2,14 +2,16 @@
     <table>
         <thead>
             <tr>
+                <th>NO</th>
                 @foreach (array_keys($data[0]) as $key)
                     <th>{{ ucfirst($key) }}</th>
                 @endforeach
             </tr>
         </thead>
         <tbody>
-            @foreach ($data as $item)
+            @foreach ($data as $key => $item)
                 <tr>
+                    <td>{{ $key + 1 }}</td>
                     @foreach ($item as $value)
                         <td>{{ $value }}</td>
                     @endforeach
@@ -18,5 +20,5 @@
         </tbody>
     </table>
 @else
-    <p>Tidak ada data tersedia.</p>
+    <p style="color: red;">Tidak ada data tersedia.</p>
 @endif

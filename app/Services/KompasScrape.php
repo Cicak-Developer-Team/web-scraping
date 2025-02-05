@@ -29,10 +29,8 @@ class KompasScrape extends CrawlerService
             $articles = [];
             foreach ($responses as $url => $response) {
                 if (!$response->successful()) continue;
-
                 $crawler = new Crawler($response->body());
                 $classItem = ".articleItem";
-
                 if ($crawler->filter($classItem)->count() === 0) continue;
 
                 $crawler->filter($classItem)->each(function ($node) use (&$articles) {
@@ -116,21 +114,14 @@ class KompasScrape extends CrawlerService
             $page = 1;
             while (true) {
                 $paginatedUrls = array_map(fn($p) => $formattedUrl . $p, range($page, $page + 4));
-
-                // Cache hasil scraping agar tidak mengambil data yang sama
-                $cachedResults = Cache::remember("scrape:" . md5($urls), now()->addMinutes(30), function () use ($paginatedUrls) {
-                    return $this->scrapePages($paginatedUrls);
-                });
-
-                if (empty($cachedResults)) {
+                $data = $this->scrapePages($paginatedUrls);
+                $results = array_merge($results, $data);
+                if (count($data) == 0) {
                     break;
                 }
-
-                $results = array_merge($results, $cachedResults);
                 $page += 5;
             }
         }
-
         return $this->printAndDownload($results);
     }
 }

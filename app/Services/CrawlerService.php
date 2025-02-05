@@ -1689,6 +1689,17 @@ class CrawlerService
                         $content = "";
                         $title = "";
                         unset($item['pagemap']);
+                        unset($item['kind']);
+                        unset($item['snippet']);
+                        unset($item['htmlSnippet']);
+                        unset($item['formattedUrl']);
+                        unset($item['htmlFormattedUrl']);
+                        unset($item['htmlTitle']);
+
+                        // skip pdf content
+                        if (isset($item['mime']) && $item['mime'] == "application/pdf") {
+                            continue;
+                        }
 
                         $response = Http::withHeaders([
                             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -1710,6 +1721,8 @@ class CrawlerService
                                 $title = $crawler->filter("h2")->text();
                             } elseif ($crawler->filter("h3")->count() > 0) {
                                 $title = $crawler->filter("h3")->text();
+                            } else {
+                                $title = $item['title'];
                             }
                         }
 

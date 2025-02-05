@@ -51,27 +51,39 @@
 </head>
 
 <body>
-    <div class="py-4 container vh-100 d-flex flex-column justify-content-center align-items-center">
+    <div class="container">
+
         <h1 class="text-center mb-4">Welcome to Scrapper Tools</h1>
-        <div class="card p-3 overflow-auto" style="min-width: 20vw">
-            <a href="{{ route('googlesearch') }}">Google Search</a>
-            <a href="{{ route('kompas') }}">Kompas</a>
-            <a href="{{ route('republika') }}">Republika</a>
-            <a href="{{ route('okezone') }}">Okezone</a>
-            <a href="{{ route('kontan') }}">Kontan</a>
-            <a href="{{ route('bisnis') }}">Bisnis</a>
-            <a href="{{ route('mediaindo') }}">Media Indo</a>
-            <a href="{{ route('detiksport') }}">Detik Sport</a>
-            <a href="{{ route('sindonews') }}">Sindonews</a>
-            <a href="{{ route('boalsport') }}">Boalsport</a>
-            <a href="{{ route('moneykompas') }}">Money.Kompas</a>
-            <a href="{{ route('rmid') }}">RM.id</a>
-            <a href="{{ route('thejakartapost') }}">The Jakarta Post</a>
-            <a href="{{ route('surabayatribunnews') }}">Surabaya Tribunnews</a>
-            <a href="{{ route('sportsindonews') }}">Sport Sindonews</a>
-            <a href="{{ route('investor') }}">Investor</a>
-            <a href="{{ route('skorid') }}">Skor.id</a>
-            <a href="{{ route('gayotribunnews') }}">Gayo Tribunnews</a>
+
+        <div class="row justify-content-center p-0 mm-0">
+            <div class="col-md">
+                <div class="card p-3 overflow-auto">
+                    <a href="{{ route('googlesearch') }}">Google Search</a>
+                    <a href="{{ route('kompas') }}">Kompas</a>
+                    <a href="{{ route('republika') }}">Republika</a>
+                    <a href="{{ route('okezone') }}">Okezone</a>
+                    <a href="{{ route('kontan') }}">Kontan</a>
+                    <a href="{{ route('bisnis') }}">Bisnis</a>
+                    <a href="{{ route('mediaindo') }}">Media Indo</a>
+                    <a href="{{ route('detiksport') }}">Detik Sport</a>
+                    <a href="{{ route('sindonews') }}">Sindonews</a>
+                    <a href="{{ route('boalsport') }}">Boalsport</a>
+                    <a href="{{ route('moneykompas') }}">Money.Kompas</a>
+                    <a href="{{ route('rmid') }}">RM.id</a>
+                    <a href="{{ route('thejakartapost') }}">The Jakarta Post</a>
+                    <a href="{{ route('surabayatribunnews') }}">Surabaya Tribunnews</a>
+                    <a href="{{ route('sportsindonews') }}">Sport Sindonews</a>
+                    <a href="{{ route('investor') }}">Investor</a>
+                    <a href="{{ route('skorid') }}">Skor.id</a>
+                    <a href="{{ route('gayotribunnews') }}">Gayo Tribunnews</a>
+                </div>
+            </div>
+            <div class="col-md">
+
+                <div class="card p-3 overflow-auto">
+                    <a href="{{ route('abmm') }}">ABM Investama Tbk.</a>
+                </div>
+            </div>
         </div>
     </div>
 

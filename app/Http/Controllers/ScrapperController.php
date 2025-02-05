@@ -111,4 +111,9 @@ class ScrapperController extends CrawlerService
     {
         return view("googlesearch");
     }
+
+    public function abmm()
+    {
+        return view("abmm");
+    }
 }

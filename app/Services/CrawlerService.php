@@ -1738,4 +1738,84 @@ class CrawlerService
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+
+    public function abmmScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        // Mendapatkan input URL dan rentang tanggal
+        $urls = $request->url;
+
+        // Hitung selisih hari antara dari dan sampai
+        $results = [];
+
+        $classItem = ".col-md-4";      // Class untuk item artikel
+        $classContent = ".desc"; // Class untuk konten artikel
+
+        $page = 1;
+        while (true) {
+            $paginatedUrl = $urls . $page;
+
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.5',
+                'Referer' => 'https://www.google.com/',
+            ])->get($paginatedUrl);
+
+            if ($response->successful()) {
+                $body = $response->body();
+                $crawler = new Crawler($body);
+                if ($crawler->filter($classItem)->count() == 0) {
+                    break; // Jika tidak ada artikel ditemukan, keluar dari while
+                }
+
+                $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
+                    $title = $node->filter("h5")->text();
+                    // Terapkan filter judul
+                    if ($this->filterTitle($title)) {
+                        // Ambil link dan gambar
+                        $link = "https://www.abm-investama.com/" . $node->filter('a')->attr('href');
+                        $gambar = "";
+                        if ($node->filter('img')->count() > 0) {
+                            $gambar = $node->filter('img')->attr('src');
+                        }
+
+                        // Get Content
+                        $responseLinkNode = Http::withHeaders([
+                            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                            'Accept-Language' => 'en-US,en;q=0.5',
+                            'Referer' => 'https://www.google.com/',
+                        ])->get($link);
+
+                        if ($responseLinkNode->successful()) {
+                            $crawlerSec = new Crawler($responseLinkNode->body());
+                            $text = "";
+
+                            // Ambil konten artikel jika ada
+                            if ($crawlerSec->filter($classContent)->count() > 0) {
+                                $text = $crawlerSec->filter($classContent)->text();
+                            }
+
+                            $text = strip_tags($text);
+                            $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                            // Simpan data ke hasil
+                            $results[] = [
+                                "title" => $title,
+                                "link" => $link,
+                                "gambar" => $gambar,
+                                "content" => $text,
+                            ];
+                        }
+                    }
+                });
+            }
+            $page++; // Tambah halaman untuk iterasi berikutnya
+        }
+
+        return $this->printAndDownload($results);
+    }
 }

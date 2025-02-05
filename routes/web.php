@@ -98,6 +98,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/googlesearch", "googlesearch")->name("googlesearch");
     Route::post("/googlesearchScrape", "googlesearchScrape")->name("googlesearchScrape");
 
+    // abmm
+    Route::get("/abmm", "abmm")->name("abmm");
+    Route::post("/abmmScrape", "abmmScrape")->name("abmmScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

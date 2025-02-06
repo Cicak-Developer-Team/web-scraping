@@ -156,4 +156,9 @@ class ScrapperController extends CrawlerService
     {
         return view("dssa");
     }
+
+    public function pgas()
+    {
+        return view("pgas");
+    }
 }

@@ -90,6 +90,7 @@
                     <a href="{{ route('elsa') }}">Elnusa Tbk</a>
                     <a href="{{ route('itmg') }}">Indo Tambangraya Megah Tbk</a>
                     <a href="{{ route('myoh') }}">Samindo Resources Tbk</a>
+                    <a href="{{ route('pgas') }}">Perusahaan Gas Negara Tbk</a>
                 </div>
             </div>
         </div>

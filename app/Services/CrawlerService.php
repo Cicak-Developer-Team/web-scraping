@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\DomCrawler\Crawler;
 
+use function Pest\Laravel\post;
+
 class CrawlerService
 {
     public $filter = [
@@ -2419,6 +2421,77 @@ class CrawlerService
             $page++; // Tambah halaman untuk iterasi berikutnya
         }
 
+        return $this->printAndDownload($results);
+    }
+
+    public function pgasScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        $url = $request->url;
+        $results = [];
+        $page = 1;
+
+        while (true) {
+            $paginatedUrl = $url;
+
+            try {
+                $response = Http::post($paginatedUrl, ["pageIndex" => 1]);
+
+                // Pastikan respons berhasil
+                if (!$response->successful()) {
+                    break;
+                }
+
+                $data = json_decode($response->body(), true)['d'] ?? [];
+
+                // Jika tidak ada data, hentikan loop
+                if (empty($data)) break;
+
+                // Proses data yang diterima
+                $mappedData = collect($data)->map(function ($item) {
+                    return [
+                        "link" => "https://www.pgn.co.id/landingberita?value=" . $item['IdBerita'],
+                        "title" => $item['Title'],
+                        "date" => $item['Date']
+                    ];
+                })->toArray();
+
+                // Ambil konten dari setiap link
+                foreach ($mappedData as $item) {
+                    try {
+                        $responseLinkNode = Http::withHeaders([
+                            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                            'Accept-Language' => 'en-US,en;q=0.5',
+                            'Referer' => 'https://www.google.com/',
+                        ])->get($item['link']);
+
+                        if (!$responseLinkNode->successful()) {
+                            continue;
+                        }
+
+                        $crawlerSec = new Crawler($responseLinkNode->body());
+                        $content = $crawlerSec->filter("div.container")->each(fn($node) => $node->text());
+
+                        $results[] = [
+                            "title" => $item['title'],
+                            "date" => $item['date'],
+                            "content" => implode("\n", $content)
+                        ];
+                    } catch (\Exception $e) {
+                        continue;
+                    }
+                }
+                break;
+            } catch (\Exception $e) {
+                break;
+            }
+
+            $page++;
+        }
+
+        // Return hasil
         return $this->printAndDownload($results);
     }
 }

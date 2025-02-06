@@ -134,6 +134,11 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/dssa", "dssa")->name("dssa");
     Route::post("/dssaScrape", "dssaScrape")->name("dssaScrape");
 
+    // pgas
+    Route::get("/pgas", "pgas")->name("pgas");
+    Route::post("/pgasScrape", "pgasScrape")->name("pgasScrape");
+
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

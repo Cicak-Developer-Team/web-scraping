@@ -84,6 +84,7 @@
                     <a href="{{ route('abmm') }}">ABM Investama Tbk</a>
                     <a href="{{ route('apex') }}">Apexindo Pratama Duta Tbk</a>
                     <a href="{{ route('bipi') }}">Astrindo Nusantara Infrastrukt</a>
+                    <a href="{{ route('dewa') }}">Darma Henwa Tbk</a>
                 </div>
             </div>
         </div>

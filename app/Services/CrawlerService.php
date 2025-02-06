@@ -26,7 +26,6 @@ class CrawlerService
         "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "Minutes of Meeting"
     ];
 
     public function scrape(Request $request)
@@ -1943,6 +1942,89 @@ class CrawlerService
                     return; // Skip jika gagal mengambil konten
                 }
             });
+            $page++;
+        }
+
+        return $this->printAndDownload($results);
+    }
+
+
+    public function dewaScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        $urls = $request->url;
+        $results = [];
+        $classItem = "article";      // Class untuk item artikel
+        $classContent = "article"; // Class untuk konten artikel
+        $page = 1;
+
+        $httpClient = Http::withOptions()->withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language' => 'en-US,en;q=0.5',
+            'Referer' => 'https://www.google.com/'
+        ]);
+
+        while (true) {
+            $paginatedUrl = $urls . $page;
+            $response = $httpClient->get($paginatedUrl);
+
+            // Hentikan loop jika response gagal
+            if (!$response->successful()) {
+                Log::error("Gagal mengambil halaman: " . $paginatedUrl);
+                break;
+            }
+
+            $crawler = new Crawler($response->body());
+            $items = $crawler->filter($classItem);
+
+            // Hentikan loop jika tidak ada item
+            if ($items->count() === 0) {
+                Log::info("Tidak ada item di halaman: " . $paginatedUrl);
+                break;
+            }
+
+            $items->each(function ($node) use (&$results, $classContent, $httpClient) {
+                // Pastikan elemen h3 ada
+                if ($node->filter("h3")->count() === 0) {
+                    Log::warning("Judul tidak ditemukan di item.");
+                    return;
+                }
+
+                $title = $node->filter("h3")->text();
+                if (!$this->filterTitle($title)) {
+                    Log::warning("Judul tidak memenuhi filter: " . $title);
+                    return;
+                }
+
+                $link = $node->filter('a')->attr('href');
+                $gambar = $node->filter('img')->count() > 0 ? $node->filter('img')->attr('src') : "";
+
+                try {
+                    $articleResponse = $httpClient->get($link);
+                    if (!$articleResponse->successful()) {
+                        Log::error("Gagal mengambil artikel: " . $link);
+                        return;
+                    }
+
+                    $crawlerSec = new Crawler($articleResponse->body());
+                    $text = $crawlerSec->filter($classContent)->count() > 0
+                        ? trim(preg_replace('/\s+/', ' ', strip_tags($crawlerSec->filter($classContent)->text())))
+                        : "";
+
+                    $results[] = [
+                        "title" => $title,
+                        "link" => $link,
+                        "gambar" => $gambar,
+                        "content" => $text,
+                    ];
+                } catch (\Exception $e) {
+                    Log::error("Error saat mengambil konten: " . $e->getMessage());
+                    return;
+                }
+            });
+
             $page++;
         }
 

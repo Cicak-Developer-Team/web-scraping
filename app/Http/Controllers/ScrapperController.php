@@ -126,4 +126,9 @@ class ScrapperController extends CrawlerService
     {
         return view("apex");
     }
+
+    public function dewa()
+    {
+        return view("dewa");
+    }
 }

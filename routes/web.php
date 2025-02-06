@@ -110,11 +110,15 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/apex", "apex")->name("apex");
     Route::post("/apexScrape", "apexScrape")->name("apexScrape");
 
+    // dewa
+    Route::get("/dewa", "dewa")->name("dewa");
+    Route::post("/dewaScrape", "dewaScrape")->name("dewaScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");
 });
-// Route::get('phpinfo', function () {
-//     echo $_SERVER["SERVER_SOFTWARE"];
-//     phpinfo();
-// });
+Route::get('phpinfo', function () {
+    echo $_SERVER["SERVER_SOFTWARE"];
+    phpinfo();
+});

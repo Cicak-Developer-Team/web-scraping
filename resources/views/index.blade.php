@@ -85,9 +85,10 @@
                     <a href="{{ route('apex') }}">Apexindo Pratama Duta Tbk</a>
                     <a href="{{ route('bipi') }}">Astrindo Nusantara Infrastrukt</a>
                     <a href="{{ route('dewa') }}">Darma Henwa Tbk</a>
-                    <a href="{{ route('doid') }}">Delta Dunia Makmur Tbk.</a>
-                    <a href="{{ route('elsa') }}">Elnusa Tbk.</a>
-                    <a href="{{ route('itmg') }}">Indo Tambangraya Megah Tbk.</a>
+                    <a href="{{ route('doid') }}">Delta Dunia Makmur Tbk</a>
+                    <a href="{{ route('elsa') }}">Elnusa Tbk</a>
+                    <a href="{{ route('itmg') }}">Indo Tambangraya Megah Tbk</a>
+                    <a href="{{ route('myoh') }}">Samindo Resources Tbk</a>
                 </div>
             </div>
         </div>

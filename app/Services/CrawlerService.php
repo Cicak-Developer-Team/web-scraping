@@ -2279,4 +2279,62 @@ class CrawlerService
 
         return $this->printAndDownload($results);
     }
+
+    public function myohScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        // Mendapatkan input URL dan rentang tanggal
+        $urls = $request->url;
+
+        // Hitung selisih hari antara dari dan sampai
+        $results = [];
+
+        $classItem = ".investor-others-item";      // Class untuk item artikel
+        $classContent = ".investor-others-inner-content"; // Class untuk konten artikel
+
+        // Looping berdasarkan selisih hari
+        $page = 1;
+        while (true) {
+            $paginatedUrl = $urls;
+
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.5',
+                'Referer' => 'https://www.google.com/',
+            ])->get($paginatedUrl);
+            if ($response->successful()) {
+                $body = $response->body();
+                $crawler = new Crawler($body);
+                if ($crawler->filter($classItem)->count() == 0) {
+                    break; // Jika tidak ada artikel ditemukan, keluar dari while
+                }
+
+                // Periksa apakah ada artikel
+                if ($crawler->filter($classItem)->count() > 0) {
+                    $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginatedUrl) {
+                        $title = $node->filter(".investor-others-title")->text();
+                        if ($this->filterTitle($title)) {
+                            $text = $node->filter($classContent)->text();
+                            // Terapkan filter judul
+                            $text = strip_tags($text);
+                            $text = trim(preg_replace('/\s+/', ' ', $text));
+
+                            // Simpan data ke hasil
+                            $results[] = [
+                                "title" => $title,
+                                "link" => $paginatedUrl,
+                                "gambar" => "",
+                                "content" => $text,
+                            ];
+                        }
+                    });
+                }
+            }
+            break;
+        }
+
+        return $this->printAndDownload($results);
+    }
 }

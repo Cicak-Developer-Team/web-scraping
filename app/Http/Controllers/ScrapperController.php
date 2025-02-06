@@ -146,4 +146,9 @@ class ScrapperController extends CrawlerService
     {
         return view("itmg");
     }
+
+    public function myoh()
+    {
+        return view("myoh");
+    }
 }

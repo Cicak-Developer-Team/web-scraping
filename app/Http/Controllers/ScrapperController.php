@@ -131,4 +131,9 @@ class ScrapperController extends CrawlerService
     {
         return view("dewa");
     }
+
+    public function doid()
+    {
+        return view("doid");
+    }
 }

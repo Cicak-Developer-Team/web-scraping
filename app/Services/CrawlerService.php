@@ -1884,4 +1884,68 @@ class CrawlerService
 
         return $this->printAndDownload($results);
     }
+
+    public function apexScrape(Request $request)
+    {
+        set_time_limit(0);
+
+        $urls = $request->url;
+        $results = [];
+        $classItem = ".content-item";      // Class untuk item artikel
+        $classContent = "article"; // Class untuk konten artikel
+        $page = 1;
+
+        $httpClient = Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language' => 'en-US,en;q=0.5',
+            'Referer' => 'https://www.google.com/',
+            'verify' => false
+        ]);
+
+        while (true) {
+            $paginatedUrl = $urls . $page;
+            $response = $httpClient->get($paginatedUrl);
+            if (!$response->successful()) break;
+
+            $crawler = new Crawler($response->body());
+            $items = $crawler->filter($classItem);
+
+            if ($items->count() === 0) break;
+
+            $items->each(function ($node) use (&$results, $classContent, $httpClient) {
+                if ($node->filter("h3")->count() === 0) return;
+
+                $title = $node->filter("h3")->text();
+                dd($title);
+                if (!$this->filterTitle($title)) return;
+
+                $link = $node->filter('a')->attr('href');
+                $gambar = $node->filter('img')->count() > 0 ? $node->filter('img')->attr('src') : "";
+
+                try {
+                    $articleResponse = $httpClient->get($link);
+                    if (!$articleResponse->successful()) return;
+
+                    $crawlerSec = new Crawler($articleResponse->body());
+                    $text = $crawlerSec->filter($classContent)->count() > 0
+                        ? trim(preg_replace('/\s+/', ' ', strip_tags($crawlerSec->filter($classContent)->text())))
+                        : "";
+
+                    $results[] = [
+                        "title" => $title,
+                        "link" => $link,
+                        "gambar" => $gambar,
+                        "content" => $text,
+                    ];
+                } catch (\Exception $e) {
+                    Log::error($e->getMessage());
+                    return; // Skip jika gagal mengambil konten
+                }
+            });
+            $page++;
+        }
+
+        return $this->printAndDownload($results);
+    }
 }

@@ -121,4 +121,9 @@ class ScrapperController extends CrawlerService
     {
         return view("bipi");
     }
+
+    public function apex()
+    {
+        return view("apex");
+    }
 }

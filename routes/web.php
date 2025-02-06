@@ -106,7 +106,15 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/bipi", "bipi")->name("bipi");
     Route::post("/bipiScrape", "bipiScrape")->name("bipiScrape");
 
+    // apex
+    Route::get("/apex", "apex")->name("apex");
+    Route::post("/apexScrape", "apexScrape")->name("apexScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");
 });
+// Route::get('phpinfo', function () {
+//     echo $_SERVER["SERVER_SOFTWARE"];
+//     phpinfo();
+// });

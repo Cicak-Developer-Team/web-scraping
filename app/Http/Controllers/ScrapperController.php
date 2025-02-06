@@ -116,4 +116,9 @@ class ScrapperController extends CrawlerService
     {
         return view("abmm");
     }
+
+    public function bipi()
+    {
+        return view("bipi");
+    }
 }

@@ -87,6 +87,7 @@
                     <a href="{{ route('dewa') }}">Darma Henwa Tbk</a>
                     <a href="{{ route('doid') }}">Delta Dunia Makmur Tbk.</a>
                     <a href="{{ route('elsa') }}">Elnusa Tbk.</a>
+                    <a href="{{ route('itmg') }}">Indo Tambangraya Megah Tbk.</a>
                 </div>
             </div>
         </div>

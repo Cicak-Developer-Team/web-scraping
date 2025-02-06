@@ -141,4 +141,9 @@ class ScrapperController extends CrawlerService
     {
         return view("elsa");
     }
+
+    public function itmg()
+    {
+        return view("itmg");
+    }
 }

@@ -3112,4 +3112,82 @@ class CrawlerService
 
         return $this->printAndDownload($results);
     }
+
+    public function tebeScrape(Request $request)
+    {
+        set_time_limit(0);
+        // Mendapatkan input URL dan rentang tanggal
+        $urls = $request->url;
+
+        // Hitung selisih hari antara dari dan sampai
+        $results = [];
+
+        $classItem = "article";      // Class untuk item artikel
+        $classContent = ".media-body"; // Class untuk konten artikel
+
+        // Looping berdasarkan selisih hari
+        $page = 1;
+        while (true) {
+            $paginatedUrl = $urls . $page;
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Referer' => 'https://www.google.com/',
+            ])->get($paginatedUrl);
+            if ($response->successful()) {
+                $body = $response->body();
+                $crawler = new Crawler($body);
+
+                if ($crawler->filter($classItem)->count() == 0) {
+                    break; // Jika tidak ada artikel ditemukan, keluar dari while
+                }
+
+                // Periksa apakah ada artikel
+                if ($crawler->filter($classItem)->count() > 0) {
+                    $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginatedUrl) {
+                        $title = $node->filter("h5")->text();
+                        // Terapkan filter judul
+                        if ($this->filterTitle($title)) {
+                            // Ambil link dan gambar
+                            $link = $node->filter('a')->attr('href');
+                            $gambar = "";
+                            if ($node->filter('img')->count() > 0) {
+                                $gambar = $node->filter('img')->attr('src');
+                            }
+
+                            // Get Content
+                            $responseLinkNode = Http::withHeaders([
+                                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                                'Referer' => 'https://www.google.com/',
+                            ])->get($link);
+
+                            if ($responseLinkNode->successful()) {
+                                $crawlerSec = new Crawler($responseLinkNode->body());
+                                $text = "";
+
+                                // Ambil konten artikel jika ada
+                                if ($crawlerSec->filter($classContent)->count() > 0) {
+                                    $text = $crawlerSec->filter($classContent)->text();
+                                }
+
+                                $text = strip_tags($text);
+                                $text = trim(preg_replace('/\s+/', ' ', $text));
+                                // Simpan data ke hasil
+                                $results[] = [
+                                    "title" => $title,
+                                    "link" => $link,
+                                    "gambar" => $gambar,
+                                    "content" => $text,
+                                ];
+                            }
+                        }
+                    });
+                }
+            }
+            $page++; // Tambah halaman untuk iterasi berikutnya
+        }
+
+        return $this->printAndDownload($results);
+    }
 }

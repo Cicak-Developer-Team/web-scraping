@@ -100,6 +100,7 @@
                     {{-- <a href="{{ route('dwgl') }}">Dwi Guna Laksana Tbk</a> --}}
                     <a href="{{ route('tcpi') }}">Transcoal Pacific Tbk</a>
                     <a href="{{ route('sure') }}">Super Energy Tbk</a>
+                    <a href="{{ route('tebe') }}">Dana Brata Luhur Tbk</a>
                 </div>
             </div>
         </div>

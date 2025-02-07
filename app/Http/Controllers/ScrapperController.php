@@ -206,4 +206,9 @@ class ScrapperController extends CrawlerService
     {
         return view("sure");
     }
+
+    public function tebe()
+    {
+        return view("tebe");
+    }
 }

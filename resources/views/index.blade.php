@@ -91,6 +91,7 @@
                     <a href="{{ route('itmg') }}">Indo Tambangraya Megah Tbk</a>
                     <a href="{{ route('myoh') }}">Samindo Resources Tbk</a>
                     <a href="{{ route('pgas') }}">Perusahaan Gas Negara Tbk</a>
+                    <a href="{{ route('ptba') }}">Bukit Asam Tbk</a>
                 </div>
             </div>
         </div>

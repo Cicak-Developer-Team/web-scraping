@@ -161,4 +161,9 @@ class ScrapperController extends CrawlerService
     {
         return view("pgas");
     }
+
+    public function ptba()
+    {
+        return view("ptba");
+    }
 }

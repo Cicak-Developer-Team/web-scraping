@@ -138,6 +138,9 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/pgas", "pgas")->name("pgas");
     Route::post("/pgasScrape", "pgasScrape")->name("pgasScrape");
 
+    // ptba
+    Route::get("/ptba", "ptba")->name("ptba");
+    Route::post("/ptbaScrape", "ptbaScrape")->name("ptbaScrape");
 
     // func
     Route::post("/scrape", "scrape")->name("scrape");

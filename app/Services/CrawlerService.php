@@ -28,7 +28,6 @@ class CrawlerService
         "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
-        "Energasindo",
     ];
 
     public function scrape(Request $request)

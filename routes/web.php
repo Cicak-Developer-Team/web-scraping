@@ -154,6 +154,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/smru", "smru")->name("smru");
     Route::post("/smruScrape", "smruScrape")->name("smruScrape");
 
+    // toba
+    Route::get("/toba", "toba")->name("toba");
+    Route::post("/tobaScrape", "tobaScrape")->name("tobaScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

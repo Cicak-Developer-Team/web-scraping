@@ -95,6 +95,7 @@
                     <a href="{{ route('raja') }}">Rukun Raharja Tbk</a>
                     <a href="{{ route('smmt') }}">Golden Eagle Energy Tbk</a>
                     {{-- <a href="{{ route('smru') }}">SMR Utama Tbk</a> --}}
+                    <a href="{{ route('toba') }}">TBS Energi Utama Tbk</a>
                 </div>
             </div>
         </div>

@@ -2782,4 +2782,51 @@ class CrawlerService
 
         return $this->printAndDownload($results);
     }
+
+    // json version
+    public function tobaScrape(Request $request)
+    {
+
+        set_time_limit(0);
+
+        // Hasil data yang akan dikembalikan
+        $url = $request->url;
+        $results = [];
+        $page = 1;
+        while (true) {
+            $paginatedUrl = $url . $page;
+            $response = Http::get($paginatedUrl);
+            $data = json_decode($response->body(), true);
+            // Iterasi setiap data untuk memproses title, gambar, dan content
+            if (!isset($data['results'])) break;
+            foreach ($data['results'] as $item) {
+                $attributes = $item;
+
+                // Ambil title
+                $title = $attributes['name'];
+                if (!$this->filterTitle($title)) continue;
+
+                // Ambil gambar
+                $image = null;
+
+                // Ambil content
+                $content = $attributes['article_languages']['content'];
+
+                // Simpan hasil
+                if ($this->filterTitle($title)) {
+                    $results[] = [
+                        "title" => $title,
+                        "link" => "",
+                        "gambar" => $image,
+                        'content' => trim($content)
+                    ];
+                }
+            }
+
+            $page++;
+        }
+
+        // Return hasil
+        return $this->printAndDownload($results);
+    }
 }

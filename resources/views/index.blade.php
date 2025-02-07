@@ -97,6 +97,7 @@
                     {{-- <a href="{{ route('smru') }}">SMR Utama Tbk</a> --}}
                     <a href="{{ route('toba') }}">TBS Energi Utama Tbk</a>
                     <a href="{{ route('pssi') }}">IMC Pelita Logistik Tbk</a>
+                    {{-- <a href="{{ route('dwgl') }}">Dwi Guna Laksana Tbk</a> --}}
                 </div>
             </div>
         </div>

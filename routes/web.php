@@ -162,6 +162,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/pssi", "pssi")->name("pssi");
     Route::post("/pssiScrape", "pssiScrape")->name("pssiScrape");
 
+    // dwgl
+    Route::get("/dwgl", "dwgl")->name("dwgl");
+    Route::post("/dwglScrape", "dwglScrape")->name("dwglScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

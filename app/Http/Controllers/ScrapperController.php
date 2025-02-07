@@ -201,4 +201,9 @@ class ScrapperController extends CrawlerService
     {
         return view("tcpi");
     }
+
+    public function sure()
+    {
+        return view("sure");
+    }
 }

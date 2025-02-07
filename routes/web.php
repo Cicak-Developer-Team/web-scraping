@@ -170,6 +170,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/tcpi", "tcpi")->name("tcpi");
     Route::post("/tcpiScrape", "tcpiScrape")->name("tcpiScrape");
 
+    // sure
+    Route::get("/sure", "sure")->name("sure");
+    Route::post("/sureScrape", "sureScrape")->name("sureScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

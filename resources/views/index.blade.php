@@ -99,6 +99,7 @@
                     <a href="{{ route('pssi') }}">IMC Pelita Logistik Tbk</a>
                     {{-- <a href="{{ route('dwgl') }}">Dwi Guna Laksana Tbk</a> --}}
                     <a href="{{ route('tcpi') }}">Transcoal Pacific Tbk</a>
+                    <a href="{{ route('sure') }}">Super Energy Tbk</a>
                 </div>
             </div>
         </div>

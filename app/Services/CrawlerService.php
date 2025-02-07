@@ -2829,4 +2829,49 @@ class CrawlerService
         // Return hasil
         return $this->printAndDownload($results);
     }
+
+    // json version
+    public function pssiScrape(Request $request)
+    {
+
+        set_time_limit(0);
+
+        // Hasil data yang akan dikembalikan
+        $url = $request->url;
+        $results = [];
+        $page = 1;
+        while (true) {
+            $paginatedUrl = $url;
+            $response = Http::get($paginatedUrl);
+            $data = json_decode($response->body(), true);
+            // Iterasi setiap data untuk memproses title, gambar, dan content
+            if (count($data) === 0) break;
+            foreach ($data as $item) {
+                $attributes = $item;
+                // Ambil title
+                $title = $attributes['title']["rendered"];
+                if (!$this->filterTitle($title)) continue;
+
+                // Ambil gambar
+                $image = "";
+
+                // Ambil content
+                $content = trim($attributes['content']['rendered']);
+
+                // Simpan hasil
+                $results[] = [
+                    "title" => $title,
+                    "link" => $attributes['link'],
+                    "gambar" => $image,
+                    'content' => trim($content)
+                ];
+                dd($results);
+            }
+            break;
+            $page++;
+        }
+
+        // Return hasil
+        return $this->printAndDownload($results);
+    }
 }

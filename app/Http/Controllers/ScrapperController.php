@@ -186,4 +186,9 @@ class ScrapperController extends CrawlerService
     {
         return view("toba");
     }
+
+    public function pssi()
+    {
+        return view("pssi");
+    }
 }

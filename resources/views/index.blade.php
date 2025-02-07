@@ -92,6 +92,7 @@
                     <a href="{{ route('myoh') }}">Samindo Resources Tbk</a>
                     <a href="{{ route('pgas') }}">Perusahaan Gas Negara Tbk</a>
                     <a href="{{ route('ptba') }}">Bukit Asam Tbk</a>
+                    <a href="{{ route('raja') }}">Rukun Raharja Tbk</a>
                 </div>
             </div>
         </div>

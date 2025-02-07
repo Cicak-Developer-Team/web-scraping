@@ -171,4 +171,9 @@ class ScrapperController extends CrawlerService
     {
         return view("raja");
     }
+
+    public function smmt()
+    {
+        return view("smmt");
+    }
 }

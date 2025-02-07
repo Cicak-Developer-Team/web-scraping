@@ -196,4 +196,9 @@ class ScrapperController extends CrawlerService
     {
         return view("dwgl");
     }
+
+    public function tcpi()
+    {
+        return view("tcpi");
+    }
 }

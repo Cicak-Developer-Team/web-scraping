@@ -166,6 +166,10 @@ Route::controller(ScrapperController::class)->group(function () {
     Route::get("/dwgl", "dwgl")->name("dwgl");
     Route::post("/dwglScrape", "dwglScrape")->name("dwglScrape");
 
+    // tcpi
+    Route::get("/tcpi", "tcpi")->name("tcpi");
+    Route::post("/tcpiScrape", "tcpiScrape")->name("tcpiScrape");
+
     // func
     Route::post("/scrape", "scrape")->name("scrape");
     Route::post("/scrapeDynamic", "scrapeDynamic")->name("scrapeDynamic");

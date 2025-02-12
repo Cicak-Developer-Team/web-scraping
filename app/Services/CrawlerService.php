@@ -1865,8 +1865,8 @@ class CrawlerService
 
                         $results[] = [
                             "title" => $title,
+                            "date" => $date,
                             "link" => $link,
-                            "gambar" => $gambar,
                             "content" => $text,
                         ];
                     } catch (\Exception $e) {

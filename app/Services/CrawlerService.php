@@ -1843,7 +1843,7 @@ class CrawlerService
 
                 $crawler = new Crawler($response->body());
                 $items = $crawler->filter($classItem);
-                // if ($items->count() === 0) break;
+                if ($items->count() === 0) break;
 
                 $items->each(function ($node) use (&$results, $classContent, $httpClient) {
                     if ($node->filter("h3")->count() === 0) return;

@@ -1849,7 +1849,6 @@ class CrawlerService
                     if ($node->filter("h3")->count() === 0) return;
                     $title = $node->filter("h3")->text();
                     $date = $node->filter(".date")->text();
-                    dd($date);
                     if (!$this->filterTitle($title)) return;
 
                     $link = $node->filter('a')->attr('href');

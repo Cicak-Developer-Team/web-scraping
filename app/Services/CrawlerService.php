@@ -25,9 +25,22 @@ class CrawlerService
         "Emisi Karbon",
         "Emisi CO2",
         "Emisi Gas Rumah Kaca",
-        "Hijau",
+        // "Hijau",
         "Polusi",
         "Perlindungan Lingkungan",
+        "Environmental Sustainability",
+        "Environmental Ethics",
+        "Low Carbon",
+        "Emission Reduction",
+        "Greenhouse Gas Emissions",
+        "Carbon Emissions",
+        "CO2 Emissions",
+        "Greenhouse Gas Emissions",
+        // "Green",
+        "Pollution",
+        "Environmental Protection",
+        "Climate Change",
+        "Environmental"
     ];
 
     public function scrape(Request $request)

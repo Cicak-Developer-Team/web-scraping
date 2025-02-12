@@ -1739,6 +1739,7 @@ class CrawlerService
         }
     }
 
+    // Perusahaan
     public function abmmScrape(Request $request)
     {
         set_time_limit(0);
@@ -1771,6 +1772,7 @@ class CrawlerService
 
                 $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
                     $title = $node->filter("h5")->text();
+                    $date = $node->filter(".post-date")->text();
                     // Terapkan filter judul
                     if ($this->filterTitle($title)) {
                         // Ambil link dan gambar
@@ -1802,10 +1804,12 @@ class CrawlerService
                             // Simpan data ke hasil
                             $results[] = [
                                 "title" => $title,
+                                "date" => $date,
                                 "link" => $link,
-                                "gambar" => $gambar,
+                                // "gambar" => $gambar,
                                 "content" => $text,
                             ];
+                            dd($results);
                         }
                     }
                 });

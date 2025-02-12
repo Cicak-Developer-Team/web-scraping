@@ -2364,6 +2364,7 @@ class CrawlerService
                 if ($crawler->filter($classItem)->count() > 0) {
                     $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginatedUrl) {
                         $title = $node->filter("h3.text-lg")->text();
+                        $date = $node->filter("h3.font-semibold")->text();
                         // Terapkan filter judul
                         if ($this->filterTitle($title)) {
                             // Ambil link dan gambar

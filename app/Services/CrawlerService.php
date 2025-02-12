@@ -1809,7 +1809,6 @@ class CrawlerService
                                 // "gambar" => $gambar,
                                 "content" => $text,
                             ];
-                            dd($results);
                         }
                     }
                 });
@@ -1844,12 +1843,13 @@ class CrawlerService
 
                 $crawler = new Crawler($response->body());
                 $items = $crawler->filter($classItem);
-                if ($items->count() === 0) break;
+                // if ($items->count() === 0) break;
 
                 $items->each(function ($node) use (&$results, $classContent, $httpClient) {
                     if ($node->filter("h3")->count() === 0) return;
-
                     $title = $node->filter("h3")->text();
+                    $date = $node->filter(".date")->text();
+                    dd($date);
                     if (!$this->filterTitle($title)) return;
 
                     $link = $node->filter('a')->attr('href');

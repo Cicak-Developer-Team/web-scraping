@@ -2062,6 +2062,7 @@ class CrawlerService
                 if ($crawler->filter($classItem)->count() > 0) {
                     $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent) {
                         $title = $node->filter(".title")->text();
+                        $date = $node->filter(".date")->text();
                         // Terapkan filter judul
                         if ($this->filterTitle($title)) {
                             // Ambil link dan gambar
@@ -2093,8 +2094,9 @@ class CrawlerService
                                 // Simpan data ke hasil
                                 $results[] = [
                                     "title" => $title,
+                                    "date" => $date,
                                     "link" => $link,
-                                    "gambar" => $gambar,
+                                    // "gambar" => $gambar,
                                     "content" => $text,
                                 ];
                             }

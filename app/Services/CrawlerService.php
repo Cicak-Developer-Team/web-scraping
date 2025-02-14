@@ -1774,7 +1774,7 @@ class CrawlerService
                     $title = $node->filter("h5")->text();
                     $date = $node->filter(".post-date")->text();
                     // Terapkan filter judul
-                    if ($this->filterTitle($title)) {
+                    if ($this->filterTitle($title) || true) {
                         // Ambil link dan gambar
                         $link = "https://www.abm-investama.com/" . $node->filter('a')->attr('href');
                         $gambar = "";
@@ -1849,7 +1849,7 @@ class CrawlerService
                     if ($node->filter("h3")->count() === 0) return;
                     $title = $node->filter("h3")->text();
                     $date = $node->filter(".date")->text();
-                    if (!$this->filterTitle($title)) return;
+                    if (!$this->filterTitle($title) || true) return;
 
                     $link = $node->filter('a')->attr('href');
                     $gambar = $node->filter('img')->count() > 0 ? $node->filter('img')->attr('src') : "";
@@ -1916,7 +1916,7 @@ class CrawlerService
 
                 $title = $node->filter("h3")->text();
                 dd($title);
-                if (!$this->filterTitle($title)) return;
+                if (!$this->filterTitle($title) || true) return;
 
                 $link = $node->filter('a')->attr('href');
                 $gambar = $node->filter('img')->count() > 0 ? $node->filter('img')->attr('src') : "";
@@ -1990,7 +1990,7 @@ class CrawlerService
                 }
 
                 $title = $node->filter("h3")->text();
-                if (!$this->filterTitle($title)) {
+                if (!$this->filterTitle($title) || true) {
                     Log::warning("Judul tidak memenuhi filter: " . $title);
                     return;
                 }
@@ -2064,7 +2064,7 @@ class CrawlerService
                         $title = $node->filter(".title")->text();
                         $date = $node->filter(".date")->text();
                         // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             // Ambil link dan gambar
                             $link = "https://deltadunia.com/" . $node->filter('a')->attr('href');
                             $gambar = "";
@@ -2120,23 +2120,22 @@ class CrawlerService
         // Hitung selisih hari antara dari dan sampai
         $results = [];
 
-        $classItem = ".item";      // Class untuk item artikel
+        $classItem = ".list-3 .item";      // Class untuk item artikel
         $classContent = ".txt-article"; // Class untuk konten artikel
 
         // Looping berdasarkan selisih hari
         $page = 1;
         while (true) {
             $paginatedUrl = $urls . $page;
-
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                 'Referer' => 'https://www.google.com/',
+                'content-type' => "text/plain"
             ])->get($paginatedUrl);
             if ($response->successful()) {
-                $body = $response->body();
+                $body = $response->gethostname();
                 $crawler = new Crawler($body);
-
                 if ($crawler->filter($classItem)->count() == 0) {
                     break; // Jika tidak ada artikel ditemukan, keluar dari while
                 }
@@ -2145,8 +2144,9 @@ class CrawlerService
                 if ($crawler->filter($classItem)->count() > 0) {
                     $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginatedUrl) {
                         $title = $node->filter("h4")->text();
+                        $date = $node->filter("span")->text();
                         // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             // Ambil link dan gambar
                             $link = $node->filter('a')->attr('href');
                             $gambar = "";
@@ -2226,7 +2226,7 @@ class CrawlerService
                     $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginatedUrl) {
                         $title = $node->filter("h4")->text();
                         // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             // Ambil link dan gambar
                             $link = $node->attr('href');
                             $gambar = "";
@@ -2307,7 +2307,7 @@ class CrawlerService
                 if ($crawler->filter($classItem)->count() > 0) {
                     $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginatedUrl) {
                         $title = $node->filter(".investor-others-title")->text();
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             $text = $node->filter($classContent)->text();
                             // Terapkan filter judul
                             $text = strip_tags($text);
@@ -2366,7 +2366,7 @@ class CrawlerService
                         $title = $node->filter("h3.text-lg")->text();
                         $date = $node->filter("h3.font-semibold")->text();
                         // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             // Ambil link dan gambar
                             $link = "https://dssa.co.id/" . $node->filter("a")->attr('href');
                             $gambar = "";
@@ -2398,8 +2398,9 @@ class CrawlerService
                                 // Simpan data ke hasil
                                 $results[] = [
                                     "title" => $title,
+                                    "date" => $date,
                                     "link" => $link,
-                                    "gambar" => $gambar,
+                                    // "gambar" => $gambar,
                                     "content" => $text,
                                 ];
                             }
@@ -2533,7 +2534,7 @@ class CrawlerService
                                 'Referer' => 'https://www.google.com/',
                             ])->get($link);
 
-                            if ($responseLinkNode->successful()) {
+                            if ($responseLinkNode->successful() || true) {
                                 $crawlerSec = new Crawler($responseLinkNode->body());
                                 $text = "";
 
@@ -2598,7 +2599,7 @@ class CrawlerService
                         $title = $node->filter("h5")->text();
 
                         // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             // Ambil link dan gambar
                             $link = "https://www.raja.co.id/" . $node->filter('a')->attr('href');
                             $gambar = "";
@@ -2823,7 +2824,7 @@ class CrawlerService
 
                 // Ambil title
                 $title = $attributes['name'];
-                if (!$this->filterTitle($title)) continue;
+                // if (!$this->filterTitle($title)) continue;
 
                 // Ambil gambar
                 $image = null;
@@ -2869,7 +2870,7 @@ class CrawlerService
                 $attributes = $item;
                 // Ambil title
                 $title = $attributes['title']["rendered"];
-                if (!$this->filterTitle($title)) continue;
+                // if (!$this->filterTitle($title)) continue;
 
                 // Ambil gambar
                 $image = "";
@@ -3008,7 +3009,7 @@ class CrawlerService
                         $title = $node->filter("h5")->text();
 
                         // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             // Ambil link dan gambar
                             $link = $node->filter('a')->attr('href');
                             $gambar = "";
@@ -3087,7 +3088,7 @@ class CrawlerService
                         $title = $node->filter("h4 a")->text();
 
                         // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             // Ambil link dan gambar
                             $link = $node->filter('a')->attr('href');
                             $gambar = "";
@@ -3166,7 +3167,7 @@ class CrawlerService
                     $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $paginatedUrl) {
                         $title = $node->filter("h5")->text();
                         // Terapkan filter judul
-                        if ($this->filterTitle($title)) {
+                        if ($this->filterTitle($title) || true) {
                             // Ambil link dan gambar
                             $link = $node->filter('a')->attr('href');
                             $gambar = "";

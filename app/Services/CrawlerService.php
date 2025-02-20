@@ -573,7 +573,6 @@ class CrawlerService
                     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                     'Referer' => 'https://www.google.com/',
                 ])->get($paginatedUrl);
-                dd($response->body());
                 $body = $response->body();
                 $crawler = new Crawler($body);
                 // Iterasi setiap item artikel
@@ -708,8 +707,6 @@ class CrawlerService
                 ])->get($paginatedUrl);
                 $body = $response->body();
                 $crawler = new Crawler($body);
-                dd($response->body());
-                dd($crawler->filter($classItem)->count());
                 // Iterasi setiap item artikel  
                 $crawler->filter($classItem)->each(function ($node) use (&$results, $classContent, $classPagination) {
                     $title = trim($node->text());
@@ -1915,7 +1912,6 @@ class CrawlerService
                 if ($node->filter("h3")->count() === 0) return;
 
                 $title = $node->filter("h3")->text();
-                dd($title);
                 if (!$this->filterTitle($title) || true) return;
 
                 $link = $node->filter('a')->attr('href');
@@ -2744,7 +2740,6 @@ class CrawlerService
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                 'Referer' => 'https://www.google.com/',
             ])->get($paginatedUrl);
-            dd($response->body());
             if ($response->successful()) {
                 $body = $response->body();
                 $crawler = new Crawler($body);
@@ -2885,7 +2880,6 @@ class CrawlerService
                     "gambar" => $image,
                     'content' => trim($content)
                 ];
-                dd($results);
             }
             break;
             $page++;
@@ -2917,7 +2911,6 @@ class CrawlerService
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                 'Referer' => 'https://www.google.com/',
             ])->get($paginatedUrl);
-            dd($response->body());
             if ($response->successful()) {
                 $body = $response->body();
                 $crawler = new Crawler($body);

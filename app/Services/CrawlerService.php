@@ -1660,14 +1660,16 @@ class CrawlerService
     public function googlesearchScrape(Request $request)
     {
         set_time_limit(0);
+
         $keyword = $request->keyword;
         $apiKey = env("GOOGLE_SEARCH_API");
         $searchEngineId = 'e50fbd3bd9bef45f6';
         $jumlahHalaman = (int) $request->jumlahHalaman;
 
         $url = "https://www.googleapis.com/customsearch/v1";
-        $client = new Client();
+        $client = new Client(['verify' => false]); // Melewati verifikasi SSL
         $results = [];
+
         try {
             for ($i = 0; $i < $jumlahHalaman; $i++) {
                 $params = [
@@ -1675,66 +1677,152 @@ class CrawlerService
                     'cx' => $searchEngineId,
                     'q' => $keyword,
                     'num' => 10,
-                    'start' => ($i * 10) + 1, // Halaman ke-X dimulai dari item ke-X
+                    'start' => ($i * 10) + 1,
                 ];
 
                 $response = $client->get($url, ['query' => $params]);
                 $data = json_decode($response->getBody(), true);
 
-                if (isset($data['items'])) {
-                    foreach ($data['items'] as $item) {
-                        $link = $item['link'];
-                        $content = "";
-                        $title = "";
-                        unset($item['pagemap']);
-                        unset($item['kind']);
-                        unset($item['snippet']);
-                        unset($item['htmlSnippet']);
-                        unset($item['formattedUrl']);
-                        unset($item['htmlFormattedUrl']);
-                        unset($item['htmlTitle']);
+                if (!isset($data['items'])) {
+                    continue;
+                }
 
-                        // skip pdf content
-                        if (isset($item['mime']) && $item['mime'] == "application/pdf") {
-                            continue;
-                        }
+                foreach ($data['items'] as $item) {
+                    $link = $item['link'];
 
-                        $response = Http::withHeaders([
+                    // Skip jika link adalah file PDF atau dokumen lainnya
+                    if ($this->isInvalidMimeType($item) || $this->isPdfUrl($link)) {
+                        continue;
+                    }
+
+                    try {
+                        $response = Http::withOptions(['verify' => false])->withHeaders([
                             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                             'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                             'Referer' => 'https://www.google.com/',
                         ])->get($link);
 
-                        if ($response->successful()) {
-                            $body = $response->body();
-                            $crawler = new Crawler($body);
-                            $crawler->filter("p")->each(function ($node) use (&$content) {
-                                $content .= $node->text();
-                            });
-
-                            if ($crawler->filter("h1")->count() > 0) {
-                                $title = $crawler->filter("h1")->text();
-                            } elseif ($crawler->filter("h2")->count() > 0) {
-                                $title = $crawler->filter("h2")->text();
-                            } elseif ($crawler->filter("h3")->count() > 0) {
-                                $title = $crawler->filter("h3")->text();
-                            } else {
-                                $title = $item['title'];
-                            }
+                        // Skip jika request gagal atau terblokir
+                        if (!$response->successful() || in_array($response->status(), [403, 429, 503])) {
+                            Log::warning("Skipping URL due to restriction: {$link}");
+                            continue;
                         }
 
+                        $body = $response->body();
+
+                        // Skip jika halaman memiliki proteksi Cloudflare atau CAPTCHA
+                        if ($this->isProtectedPage($body)) {
+                            Log::warning("Skipping protected URL: {$link}");
+                            continue;
+                        }
+
+                        $crawler = new Crawler($body);
+                        $content = $this->extractContent($crawler);
+                        $title = $this->extractTitle($crawler, $item);
+
+                        if (empty($content)) {
+                            continue;
+                        }
+
+                        // Simpan hasil setelah dibersihkan
+                        $item = $this->cleanItem($item);
                         $item['title'] = $title;
                         $item['content'] = $content;
                         $results[] = $item;
+
+                        // Delay untuk menghindari deteksi bot
+                        usleep(rand(500000, 2000000));
+                    } catch (\Exception $e) {
+                        Log::warning("Error fetching URL {$link}: " . $e->getMessage());
+                        continue;
                     }
                 }
             }
+
             return $this->printAndDownload($results);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Cek jika hasil Google mengandung file yang tidak bisa diproses (PDF, DOCX, dll).
+     */
+    private function isInvalidMimeType($item)
+    {
+        return isset($item['mime']) && in_array($item['mime'], [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+        ]);
+    }
+
+    /**
+     * Cek jika URL memiliki ekstensi PDF.
+     */
+    private function isPdfUrl($url)
+    {
+        return pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) === 'pdf';
+    }
+
+    /**
+     * Deteksi halaman yang memiliki proteksi seperti Cloudflare atau CAPTCHA.
+     */
+    private function isProtectedPage($body)
+    {
+        return str_contains($body, "Checking your browser") ||
+            str_contains($body, "Access Denied") ||
+            str_contains($body, "Please enable JavaScript");
+    }
+
+    /**
+     * Ekstrak teks dari elemen <p> di dalam halaman.
+     */
+    private function extractContent(Crawler $crawler)
+    {
+        $content = '';
+        $crawler->filter("p")->each(function ($node) use (&$content) {
+            $content .= $node->text() . " ";
+        });
+
+        return trim($content);
+    }
+
+    /**
+     * Ekstrak judul halaman berdasarkan elemen heading.
+     */
+    private function extractTitle(Crawler $crawler, $item)
+    {
+        if ($crawler->filter("h1")->count() > 0) {
+            return $crawler->filter("h1")->text();
+        } elseif ($crawler->filter("h2")->count() > 0) {
+            return $crawler->filter("h2")->text();
+        } elseif ($crawler->filter("h3")->count() > 0) {
+            return $crawler->filter("h3")->text();
+        }
+
+        return $item['title'];
+    }
+
+    /**
+     * Bersihkan data yang tidak perlu dari hasil Google.
+     */
+    private function cleanItem($item)
+    {
+        unset(
+            $item['pagemap'],
+            $item['kind'],
+            $item['snippet'],
+            $item['htmlSnippet'],
+            $item['formattedUrl'],
+            $item['htmlFormattedUrl'],
+            $item['htmlTitle']
+        );
+
+        return $item;
+    }
+
 
     // Perusahaan
     public function abmmScrape(Request $request)
